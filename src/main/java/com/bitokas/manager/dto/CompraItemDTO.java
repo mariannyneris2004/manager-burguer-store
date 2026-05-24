@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 public class CompraItemDTO {
     private Long id;
     private Long compraId;
-    private Long ingrediente_id;
+    private Long ingredienteId;
     private Double quantidade;
     private Double valorUnitario;
 }

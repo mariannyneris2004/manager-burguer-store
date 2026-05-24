@@ -12,4 +12,6 @@ public class ProdutoIngredienteDTO {
     private Long produtoId;
     private Long ingredienteId;
     private Double quantidade;
+
+    private Boolean selecionado;
 }

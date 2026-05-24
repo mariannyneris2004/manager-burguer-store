@@ -36,7 +36,7 @@ public class CompraIngredienteService {
         salvarItens(compra.getId(), dto.getItens());
         if (dto.getItens() != null) {
             for (CompraItemDTO item : dto.getItens()) {
-                estoqueService.registrarEntrada(item.getIngrediente_id(), item.getQuantidade());
+                estoqueService.registrarEntrada(item.getIngredienteId(), item.getQuantidade());
             }
         }
 
@@ -94,7 +94,7 @@ public class CompraIngredienteService {
         for (CompraItemDTO itemDTO : itens) {
             CompraItem item = new CompraItem();
             item.setCompraId(compraId);
-            item.setIngredienteId(itemDTO.getIngrediente_id());
+            item.setIngredienteId(itemDTO.getIngredienteId());
             item.setQuantidade(itemDTO.getQuantidade());
             item.setValorUnitario(itemDTO.getValorUnitario());
             entityManager.persist(item);

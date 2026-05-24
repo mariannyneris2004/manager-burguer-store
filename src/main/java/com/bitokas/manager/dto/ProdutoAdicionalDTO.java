@@ -11,4 +11,6 @@ public class ProdutoAdicionalDTO {
     private Long id;
     private Long produtoId;
     private Long adicionalId;
+
+    private Boolean selecionado;
 }

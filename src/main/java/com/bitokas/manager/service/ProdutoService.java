@@ -21,6 +21,20 @@ public class ProdutoService {
     private EntityManager entityManager;
 
     public ProdutoDTO cadastrar(ProdutoDTO dto) {
+        if (dto.getIngredientes() != null) {
+            dto.getIngredientes().removeIf(a ->
+                    a.getIngredienteId() == null
+                            || !Boolean.TRUE.equals(a.getSelecionado())
+            );
+        }
+
+        if (dto.getAdicionaisPermitidos() != null) {
+            dto.getAdicionaisPermitidos().removeIf(a ->
+                    a.getAdicionalId() == null
+                            || !Boolean.TRUE.equals(a.getSelecionado())
+            );
+        }
+
         Produto produto = new Produto();
         produto.setNome(dto.getNome());
         produto.setValorVenda(dto.getValorVenda());
@@ -42,9 +56,23 @@ public class ProdutoService {
         produto.setCategoria(dto.getCategoria());
         entityManager.merge(produto);
 
+        if (dto.getIngredientes() != null) {
+            dto.getIngredientes().removeIf(a ->
+                    a.getIngredienteId() == null
+                            || !Boolean.TRUE.equals(a.getSelecionado())
+            );
+        }
+
         entityManager.createQuery("delete from ProdutoIngrediente pi where pi.produtoId = :produtoId")
                 .setParameter("produtoId", id)
                 .executeUpdate();
+
+        if (dto.getAdicionaisPermitidos() != null) {
+            dto.getAdicionaisPermitidos().removeIf(a ->
+                    a.getAdicionalId() == null
+                            || !Boolean.TRUE.equals(a.getSelecionado())
+            );
+        }
 
         entityManager.createQuery("delete from ProdutoAdicional pa where pa.produtoId = :produtoId")
                 .setParameter("produtoId", id)
@@ -116,14 +144,27 @@ public class ProdutoService {
     }
 
     private void salvarIngredientesDoProduto(Long produtoId, List<ProdutoIngredienteDTO> ingredientes) {
+
         if (ingredientes == null) {
             return;
         }
+
         for (ProdutoIngredienteDTO item : ingredientes) {
+
+            if (!Boolean.TRUE.equals(item.getSelecionado())) {
+                continue;
+            }
+
+            if (item.getIngredienteId() == null) {
+                continue;
+            }
+
             ProdutoIngrediente pi = new ProdutoIngrediente();
+
             pi.setProdutoId(produtoId);
             pi.setIngredienteId(item.getIngredienteId());
             pi.setQuantidade(item.getQuantidade());
+
             entityManager.persist(pi);
         }
     }
@@ -132,10 +173,22 @@ public class ProdutoService {
         if (adicionais == null) {
             return;
         }
+
         for (ProdutoAdicionalDTO item : adicionais) {
+
+            if (!Boolean.TRUE.equals(item.getSelecionado())) {
+                continue;
+            }
+
+            if (item.getAdicionalId() == null) {
+                continue;
+            }
+
             ProdutoAdicional pa = new ProdutoAdicional();
+
             pa.setProdutoId(produtoId);
             pa.setAdicionalId(item.getAdicionalId());
+
             entityManager.persist(pa);
         }
     }
@@ -164,7 +217,8 @@ public class ProdutoService {
                 item.getId(),
                 item.getProdutoId(),
                 item.getIngredienteId(),
-                item.getQuantidade()
+                item.getQuantidade(),
+                true
         );
     }
 
@@ -172,7 +226,8 @@ public class ProdutoService {
         return new ProdutoAdicionalDTO(
                 item.getId(),
                 item.getProdutoId(),
-                Long.valueOf(item.getAdicionalId())
+                item.getAdicionalId(),
+                true
         );
     }
 }
