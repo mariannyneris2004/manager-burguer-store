@@ -12,4 +12,6 @@ public class PedidoAdicionalDTO {
     private Long pedidoId;
     private Long adicionalId;
     private Integer quantidade;
+
+    private Boolean selecionado;
 }

@@ -35,14 +35,20 @@ public class PedidoService {
 
         dto.setProdutos(
                 dto.getProdutos().stream()
-                        .filter(p -> p.getProdutoId() != null)
+                        .filter(p ->
+                                p.getProdutoId() != null
+                                        && Boolean.TRUE.equals(p.getSelecionado())
+                        )
                         .toList()
         );
 
         dto.setAdicionais(
                 dto.getAdicionais() == null ? null :
                         dto.getAdicionais().stream()
-                        .filter(a -> a.getAdicionalId() != null)
+                        .filter(a ->
+                                a.getAdicionalId() != null
+                                && Boolean.TRUE.equals(a.getSelecionado())
+                        )
                         .toList()
         );
 
@@ -97,6 +103,10 @@ public class PedidoService {
 
         if (dto.getProdutos() != null) {
             for (PedidoProdutoDTO item : dto.getProdutos()) {
+
+                if (!Boolean.TRUE.equals(item.getSelecionado())) {
+                    continue;
+                }
                 Produto produto = entityManager.find(Produto.class, item.getProdutoId());
                 if (produto == null) {
                     throw new IllegalArgumentException("Produto não encontrado: " + item.getProdutoId());
@@ -107,6 +117,10 @@ public class PedidoService {
 
         if (dto.getAdicionais() != null) {
             for (PedidoAdicionalDTO item : dto.getAdicionais()) {
+
+                if (!Boolean.TRUE.equals(item.getSelecionado())) {
+                    continue;
+                }
                 Adicional adicional = entityManager.find(Adicional.class, item.getAdicionalId());
                 if (adicional == null) {
                     throw new IllegalArgumentException("Adicional não encontrado: " + item.getAdicionalId());
@@ -161,29 +175,53 @@ public class PedidoService {
     }
 
     private void salvarProdutosDoPedido(Long pedidoId, List<PedidoProdutoDTO> produtos) {
+
         if (produtos == null) {
             return;
         }
 
         for (PedidoProdutoDTO itemDTO : produtos) {
+
+            if (!Boolean.TRUE.equals(itemDTO.getSelecionado())) {
+                continue;
+            }
+
+            if (itemDTO.getProdutoId() == null) {
+                continue;
+            }
+
             PedidoProduto item = new PedidoProduto();
+
             item.setPedidoId(pedidoId);
             item.setProdutoId(itemDTO.getProdutoId());
             item.setQuantidade(itemDTO.getQuantidade());
+
             entityManager.persist(item);
         }
     }
 
     private void salvarAdicionaisDoPedido(Long pedidoId, List<PedidoAdicionalDTO> adicionais) {
+
         if (adicionais == null) {
             return;
         }
 
         for (PedidoAdicionalDTO itemDTO : adicionais) {
+
+            if (!Boolean.TRUE.equals(itemDTO.getSelecionado())) {
+                continue;
+            }
+
+            if (itemDTO.getAdicionalId() == null) {
+                continue;
+            }
+
             PedidoAdicional item = new PedidoAdicional();
+
             item.setPedidoId(pedidoId);
             item.setAdicionalId(itemDTO.getAdicionalId());
             item.setQuantidade(itemDTO.getQuantidade());
+
             entityManager.persist(item);
         }
     }
@@ -232,7 +270,8 @@ public class PedidoService {
                         item.getId(),
                         item.getPedidoId(),
                         item.getProdutoId(),
-                        item.getQuantidade()
+                        item.getQuantidade(),
+                        true
                 ))
                 .toList();
     }
@@ -243,7 +282,8 @@ public class PedidoService {
                         item.getId(),
                         item.getPedidoId(),
                         item.getAdicionalId(),
-                        item.getQuantidade()
+                        item.getQuantidade(),
+                        true
                 ))
                 .toList();
     }
@@ -254,5 +294,103 @@ public class PedidoService {
 
     private Integer n(Integer valor) {
         return valor == null ? 0 : valor;
+    }
+
+    public PedidoDTO atualizar(Long id, PedidoDTO dto) {
+
+        Pedido pedido = buscarEntidadePorId(id);
+
+        List<PedidoProduto> produtosAntigos = listarProdutosEntidadeDoPedido(id);
+
+        for (PedidoProduto item : produtosAntigos) {
+            estoqueService.registrarEntradaPorProduto(
+                    item.getProdutoId(),
+                    item.getQuantidade()
+            );
+        }
+
+        List<PedidoAdicional> adicionaisAntigos = listarAdicionaisEntidadeDoPedido(id);
+
+        for (PedidoAdicional item : adicionaisAntigos) {
+            estoqueService.registrarEntradaPorAdicional(
+                    item.getAdicionalId(),
+                    item.getQuantidade()
+            );
+        }
+
+        pedido.setNomeCliente(dto.getNomeCliente());
+        pedido.setTipoEntrega(dto.getTipoEntrega());
+        pedido.setValorEntrega(dto.getValorEntrega());
+
+        if (dto.getProdutos() != null) {
+
+            dto.setProdutos(
+                    dto.getProdutos()
+                            .stream()
+                            .filter(p ->
+                                    p.getProdutoId() != null
+                                            && Boolean.TRUE.equals(p.getSelecionado())
+                            )
+                            .toList()
+            );
+        }
+
+        if (dto.getAdicionais() != null) {
+
+            dto.setAdicionais(
+                    dto.getAdicionais()
+                            .stream()
+                            .filter(a ->
+                                    a.getAdicionalId() != null
+                                            && Boolean.TRUE.equals(a.getSelecionado())
+                            )
+                            .toList()
+            );
+        }
+
+        double valorTotal = calcularValorTotal(dto);
+
+        pedido.setValorTotal(valorTotal);
+
+        if (dto.getValorPago() == null) {
+            pedido.setValorPago(valorTotal);
+        } else {
+            pedido.setValorPago(dto.getValorPago());
+        }
+
+        entityManager.merge(pedido);
+
+        entityManager.createQuery(
+                        "delete from PedidoProduto pp where pp.pedidoId = :pedidoId"
+                )
+                .setParameter("pedidoId", id)
+                .executeUpdate();
+
+        entityManager.createQuery(
+                        "delete from PedidoAdicional pa where pa.pedidoId = :pedidoId"
+                )
+                .setParameter("pedidoId", id)
+                .executeUpdate();
+
+        salvarProdutosDoPedido(id, dto.getProdutos());
+
+        salvarAdicionaisDoPedido(id, dto.getAdicionais());
+
+        baixarEstoqueDoPedido(id);
+
+        return buscarPorId(id);
+    }
+
+    public void excluir(Long id) {
+        entityManager.createQuery("delete from PedidoProduto pp where pp.pedidoId = :pedidoId")
+                .setParameter("pedidoId", id)
+                .executeUpdate();
+
+        entityManager.createQuery("delete from PedidoAdicional pa where pa.pedidoId = :pedidoId")
+                .setParameter("pedidoId", id)
+                .executeUpdate();
+
+        Pedido pedido = buscarEntidadePorId(id);
+        entityManager.remove(entityManager.contains(pedido) ? pedido : entityManager.merge(pedido));
     }
 }

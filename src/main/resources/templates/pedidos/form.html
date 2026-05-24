@@ -11,7 +11,6 @@
 
     <input type="hidden" th:field="*{id}"/>
 
-    <!-- Nome do Cliente -->
     <label>Cliente:</label>
     <input type="text" th:field="*{nomeCliente}" required/><br/><br/>
 
@@ -27,22 +26,31 @@
 
     <!-- Valor entrega -->
     <label>Valor da Entrega:</label>
-    <input type="number" th:field="*{valorEntrega}" step="0.01"/><br/><br/>
+    <input type="number" th:field="*{valorEntrega}" step="0.00"/><br/><br/>
 
     <!-- Produtos -->
     <h3>Produtos</h3>
     <div th:each="p, i : ${produtosDisponiveis}">
+
+        <input type="hidden"
+               th:field="*{produtos[__${i.index}__].id}" />
+
+        <input type="hidden"
+               th:field="*{produtos[__${i.index}__].pedidoId}" />
+
+        <input type="hidden"
+               th:field="*{produtos[__${i.index}__].produtoId}" />
+
         <input type="checkbox"
-               th:value="${p.id}"
-               th:field="*{produtos[__${i.index}__].produtoId}"/>
+               th:field="*{produtos[__${i.index}__].selecionado}" />
 
         <span th:text="${p.nome}"></span>
 
-        <!-- Quantidade -->
         <input type="number"
-               min="1"
+               min="0"
                th:field="*{produtos[__${i.index}__].quantidade}"
                placeholder="Qtd"/>
+
     </div>
 
     <br/>
@@ -50,23 +58,32 @@
     <!-- Adicionais -->
     <h3>Adicionais</h3>
     <div th:each="a, j : ${adicionaisDisponiveis}">
+
+        <input type="hidden"
+               th:field="*{adicionais[__${j.index}__].id}" />
+
+        <input type="hidden"
+               th:field="*{adicionais[__${j.index}__].pedidoId}" />
+
+        <input type="hidden"
+               th:field="*{adicionais[__${j.index}__].adicionalId}" />
+
         <input type="checkbox"
-               th:value="${a.id}"
-               th:field="*{adicionais[__${j.index}__].adicionalId}"/>
+               th:field="*{adicionais[__${j.index}__].selecionado}" />
 
         <span th:text="${a.nome}"></span>
 
-        <!-- Quantidade -->
         <input type="number"
-               min="1"
+               min="0"
                th:field="*{adicionais[__${j.index}__].quantidade}"
                placeholder="Qtd"/>
+
     </div>
 
     <br/>
 
     <label>Valor Pago:</label>
-    <input type="number" th:field="*{valorPago}" step="0.01"/><br/><br/>
+    <input type="number" th:field="*{valorPago}" step="0.00"/><br/><br/>
 
     <button type="submit">Salvar</button>
     <a th:href="@{/pedidos}">Cancelar</a>

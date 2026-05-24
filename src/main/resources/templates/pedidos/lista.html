@@ -15,6 +15,7 @@
     <th>ID</th>
     <th>Cliente</th>
     <th>Total</th>
+    <th>Valor Pago</th>
     <th>Entrega/Retirada</th>
     <th>Ações</th>
   </tr>
@@ -25,19 +26,23 @@
     <td th:text="${p.id}"></td>
     <td th:text="${p.nomeCliente}"></td>
     <td th:text="${p.valorTotal}"></td>
+    <td th:text="${p.valorPago}"></td>
 
     <td th:text="${p.tipoEntrega == T(com.bitokas.manager.model.pedidos.TipoEntrega).ENTREGA} ? 'Entrega' : 'Retirada'"></td>
 
     <td>
       <a th:href="@{'/pedidos/editar/' + ${p.id}}">Editar</a>
 
-      <form th:action="@{'/pedidos/' + ${p.id} + '/excluir'}" method="post" style="display:inline;">
+      <form th:action="@{'/pedidos/' + ${p.id} + '/excluir'}"
+            method="post"
+            style="display:inline;">
+
         <button type="submit">Excluir</button>
+
       </form>
     </td>
   </tr>
   </tbody>
-
 </table>
 
 </body>
