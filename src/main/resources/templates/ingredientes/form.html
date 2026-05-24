@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Ingrediente</title>
+</head>
+<body>
+
+<h1 th:text="${ingrediente.id != null} ? 'Editar Ingrediente' : 'Novo Ingrediente'"></h1>
+
+<form th:action="@{/ingredientes/salvar}" th:object="${ingrediente}" method="post">
+
+    <input type="hidden" th:field="*{id}"/>
+
+    <label>Nome:</label>
+    <input type="text" th:field="*{nome}" required/><br/>
+
+    <label>Custo:</label>
+    <input type="number" step="0.01" th:field="*{custo}" required/><br/>
+
+    <button type="submit">Salvar</button>
+    <a th:href="@{/ingredientes}">Cancelar</a>
+</form>
+
+</body>
+</html>

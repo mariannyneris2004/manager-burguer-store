@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Pedidos</title>
+</head>
+<body>
+
+<h1>Lista de Pedidos</h1>
+
+<a th:href="@{/pedidos/novo}">Novo Pedido</a>
+
+<table border="1">
+  <thead>
+  <tr>
+    <th>ID</th>
+    <th>Cliente</th>
+    <th>Total</th>
+    <th>Entrega/Retirada</th>
+    <th>Ações</th>
+  </tr>
+  </thead>
+
+  <tbody>
+  <tr th:each="p : ${pedidos}">
+    <td th:text="${p.id}"></td>
+    <td th:text="${p.nomeCliente}"></td>
+    <td th:text="${p.valorTotal}"></td>
+
+    <td th:text="${p.tipoEntrega == T(com.bitokas.manager.model.pedidos.TipoEntrega).ENTREGA} ? 'Entrega' : 'Retirada'"></td>
+
+    <td>
+      <a th:href="@{'/pedidos/editar/' + ${p.id}}">Editar</a>
+
+      <form th:action="@{'/pedidos/' + ${p.id} + '/excluir'}" method="post" style="display:inline;">
+        <button type="submit">Excluir</button>
+      </form>
+    </td>
+  </tr>
+  </tbody>
+
+</table>
+
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Pedido</title>
+</head>
+<body>
+
+<h1 th:text="${pedido.id != null} ? 'Editar Pedido' : 'Novo Pedido'"></h1>
+
+<form th:action="@{/pedidos/salvar}" th:object="${pedido}" method="post">
+
+    <input type="hidden" th:field="*{id}"/>
+
+    <!-- Nome do Cliente -->
+    <label>Cliente:</label>
+    <input type="text" th:field="*{nomeCliente}" required/><br/><br/>
+
+    <!-- Tipo de Entrega -->
+    <label>Tipo de Entrega:</label>
+    <select th:field="*{tipoEntrega}">
+        <option th:each="t : ${tiposEntrega}"
+                th:value="${t}"
+                th:text="${t}">
+        </option>
+    </select>
+    <br/><br/>
+
+    <!-- Valor entrega -->
+    <label>Valor da Entrega:</label>
+    <input type="number" th:field="*{valorEntrega}" step="0.01"/><br/><br/>
+
+    <!-- Produtos -->
+    <h3>Produtos</h3>
+    <div th:each="p, i : ${produtosDisponiveis}">
+        <input type="checkbox"
+               th:value="${p.id}"
+               th:field="*{produtos[__${i.index}__].produtoId}"/>
+
+        <span th:text="${p.nome}"></span>
+
+        <!-- Quantidade -->
+        <input type="number"
+               min="1"
+               th:field="*{produtos[__${i.index}__].quantidade}"
+               placeholder="Qtd"/>
+    </div>
+
+    <br/>
+
+    <!-- Adicionais -->
+    <h3>Adicionais</h3>
+    <div th:each="a, j : ${adicionaisDisponiveis}">
+        <input type="checkbox"
+               th:value="${a.id}"
+               th:field="*{adicionais[__${j.index}__].adicionalId}"/>
+
+        <span th:text="${a.nome}"></span>
+
+        <!-- Quantidade -->
+        <input type="number"
+               min="1"
+               th:field="*{adicionais[__${j.index}__].quantidade}"
+               placeholder="Qtd"/>
+    </div>
+
+    <br/>
+
+    <label>Valor Pago:</label>
+    <input type="number" th:field="*{valorPago}" step="0.01"/><br/><br/>
+
+    <button type="submit">Salvar</button>
+    <a th:href="@{/pedidos}">Cancelar</a>
+
+</form>
+
+</body>
+</html>
