@@ -28,7 +28,11 @@ public class IngredienteController {
 
     @PostMapping("/salvar")
     public String salvar(@ModelAttribute("ingrediente") IngredienteDTO ingredienteDTO) {
-        ingredienteService.cadastrar(ingredienteDTO);
+        if (ingredienteDTO.getId() != null) {
+            ingredienteService.atualizar(ingredienteDTO.getId(), ingredienteDTO);
+        } else {
+            ingredienteService.cadastrar(ingredienteDTO);
+        }
         return "redirect:/ingredientes";
     }
 
