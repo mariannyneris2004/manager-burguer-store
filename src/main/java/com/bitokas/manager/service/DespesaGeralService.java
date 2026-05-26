@@ -66,8 +66,11 @@ public class DespesaGeralService {
     }
 
     public List<DespesaGeralDTO> listarPorPeriodo(Date inicio, Date fim) {
+        if (inicio == null && fim == null){
+            return null;
+        }
         return entityManager.createQuery(
-                        "select d from DespesaGeral d where d.dataDespesa between :inicio and :fim order by d.dataDespesa desc",
+                        "select d from DespesaGeral d where d.dataDespesa >= :inicio and d.dataDespesa < :fim order by d.dataDespesa desc",
                         DespesaGeral.class)
                 .setParameter("inicio", inicio)
                 .setParameter("fim", fim)

@@ -1,6 +1,7 @@
 package com.bitokas.manager.service;
 
 import com.bitokas.manager.dto.EstoqueDTO;
+import com.bitokas.manager.dto.IngredienteDTO;
 import com.bitokas.manager.model.gastos.Estoque;
 import com.bitokas.manager.model.gastos.CompraItem;
 import com.bitokas.manager.model.produtos.AdicionalIngrediente;
@@ -8,16 +9,22 @@ import com.bitokas.manager.model.produtos.ProdutoIngrediente;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class EstoqueService {
 
     @PersistenceContext
     private EntityManager entityManager;
+
+    private final IngredienteService ingredienteService;
+
 
     public EstoqueDTO registrarEntrada(Long ingredienteId, Double quantidade) {
         Estoque estoque = buscarEntidadePorIngrediente(ingredienteId);
@@ -69,11 +76,30 @@ public class EstoqueService {
     }
 
     public List<EstoqueDTO> listarTodos() {
-        return entityManager.createQuery("select e from Estoque e order by e.id", Estoque.class)
-                .getResultList()
-                .stream()
-                .map(this::toDTO)
-                .toList();
+        List<IngredienteDTO> ingredientes = ingredienteService.listarTodos();
+        List<EstoqueDTO> estoqueDTOList = new ArrayList<>();
+
+        for (IngredienteDTO ingrediente : ingredientes) {
+
+            Estoque estoque = buscarEntidadePorIngrediente(ingrediente.getId());
+
+            if (estoque == null) {
+
+                estoqueDTOList.add(
+                        new EstoqueDTO(
+                                null,
+                                ingrediente.getId(),
+                                0d
+                        )
+                );
+
+            } else {
+
+                estoqueDTOList.add(toDTO(estoque));
+            }
+        }
+
+        return estoqueDTOList;
     }
 
     public void baixarIngredientesDoProduto(Long produtoId, Integer quantidadeProduto) {

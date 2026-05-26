@@ -34,7 +34,11 @@ public class DespesaGeralController {
 
     @PostMapping("/salvar")
     public String salvar(@ModelAttribute("despesa") DespesaGeralDTO despesaDTO) {
-        despesaGeralService.cadastrar(despesaDTO);
+        if (despesaDTO.getId() != null){
+            despesaGeralService.atualizar(despesaDTO.getId(), despesaDTO);
+        } else {
+            despesaGeralService.cadastrar(despesaDTO);
+        }
         return "redirect:/despesas";
     }
 
@@ -61,9 +65,15 @@ public class DespesaGeralController {
 
     @GetMapping("/periodo")
     public String listarPorPeriodo(
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date inicio,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date fim,
+            @DateTimeFormat(pattern = "yyyy-MM-dd") Date inicio,
+            @DateTimeFormat(pattern = "yyyy-MM-dd") Date fim,
             Model model) {
+
+        if (inicio != null && fim == null){
+            fim = new Date();
+        } else if (inicio == null && fim != null){
+            inicio = fim;
+        }
 
         model.addAttribute("despesas", despesaGeralService.listarPorPeriodo(inicio, fim));
         model.addAttribute("inicio", inicio);

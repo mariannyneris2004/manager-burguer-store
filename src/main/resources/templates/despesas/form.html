@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Despesa Geral</title>
+</head>
+<body>
+
+<h1 th:text="${despesa.id != null} ? 'Editar Despesa' : 'Nova Despesa'"></h1>
+
+<form th:action="@{/despesas/salvar}" th:object="${despesa}" method="post">
+
+    <input type="hidden" th:field="*{id}"/>
+
+    <label>Nome:</label>
+    <input type="text" th:field="*{nome}" required/>
+    <br/><br/>
+
+    <label>Valor (R$):</label>
+    <input type="number" th:field="*{valor}" step="0.01" required/>
+    <br/><br/>
+
+    <label>Data da despesa:</label>
+    <input
+            type="date"
+            th:field="*{dataDespesa}"
+            th:value="${despesa.dataDespesa != null ? #dates.format(despesa.dataDespesa, 'yyyy-MM-dd') : ''}"
+            required
+    />
+    <br/><br/>
+
+    <label>Frequência:</label>
+    <select th:field="*{frequencia}" required>
+        <option value="">Selecione...</option>
+        <option th:each="f : ${frequencias}" th:value="${f}" th:text="${f}"></option>
+    </select>
+    <br/><br/>
+
+    <button type="submit">Salvar</button>
+    <a th:href="@{/despesas}">Cancelar</a>
+</form>
+
+</body>
+</html>

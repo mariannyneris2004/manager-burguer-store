@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Despesas Gerais</title>
+</head>
+<body>
+
+<h1>Lista de Despesas Gerais</h1>
+
+<p>
+    <a th:href="@{/}">Início</a> |
+    <a th:href="@{/despesas/novo}">Nova despesa</a> |
+    <a th:href="@{/despesas}">Todas</a>
+</p>
+
+<div>
+    <strong>Filtrar por frequência:</strong>
+    <a th:each="f : ${frequencias}"
+       th:href="@{/despesas/frequencia/{freq}(freq=${f})}"
+       th:text="${f}"
+       style="margin-right: 8px;"></a>
+</div>
+
+<br/>
+
+<form th:action="@{/despesas/periodo}" method="get">
+    <label>Início:</label>
+    <input type="date" name="inicio"
+           th:value="${inicio != null ? #dates.format(inicio, 'yyyy-MM-dd') : ''}"/>
+
+    <label>Fim:</label>
+    <input type="date" name="fim"
+           th:value="${fim != null ? #dates.format(fim, 'yyyy-MM-dd') : ''}"/>
+
+    <button type="submit">Filtrar período</button>
+</form>
+
+<br/>
+
+<table border="1">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Valor (R$)</th>
+        <th>Frequência</th>
+        <th>Data</th>
+        <th>Ações</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr th:each="d : ${despesas}">
+        <td th:text="${d.id}"></td>
+        <td th:text="${d.nome}"></td>
+        <td th:text="${d.valor}"></td>
+        <td th:text="${d.frequencia}"></td>
+        <td th:text="${d.dataDespesa != null ? #dates.format(d.dataDespesa, 'dd/MM/yyyy') : ''}"></td>
+        <td>
+            <a th:href="@{'/despesas/editar/' + ${d.id}}">Editar</a>
+
+            <form th:action="@{'/despesas/' + ${d.id} + '/excluir'}"
+                  method="post"
+                  style="display:inline;">
+                <button type="submit">Excluir</button>
+            </form>
+        </td>
+    </tr>
+
+    <tr th:if="${despesas == null or #lists.isEmpty(despesas)}">
+        <td colspan="6">Nenhuma despesa encontrada.</td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

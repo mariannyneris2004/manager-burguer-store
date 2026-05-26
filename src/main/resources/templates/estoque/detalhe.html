@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Detalhe do Estoque</title>
+</head>
+<body>
+
+<h1>Detalhe do Estoque</h1>
+
+<p>
+    <a th:href="@{/estoque}">Voltar para o estoque</a>
+</p>
+
+<h3 th:text="${ingrediente.nome}"></h3>
+
+<p><strong>ID do ingrediente:</strong> <span th:text="${ingrediente.id}"></span></p>
+<p><strong>Medida unitária:</strong> <span th:text="${ingrediente.medidaUnitaria}"></span></p>
+<p><strong>Quantidade em estoque:</strong> <span th:text="${itemEstoque.quantidade}"></span></p>
+
+<hr/>
+
+<h3>Movimentar este ingrediente</h3>
+
+<form method="post">
+    <input type="hidden" name="ingredienteId" th:value="${ingrediente.id}"/>
+
+    <label>Quantidade:</label>
+    <input type="number" name="quantidade" step="0.001" min="0.001" required/>
+
+    <button type="submit" th:formaction="@{/estoque/entrada}">Entrada</button>
+    <button type="submit" th:formaction="@{/estoque/saida}">Saída</button>
+</form>
+
+<p>
+    Para ajuste manual, use valor positivo para adicionar e valor negativo para baixar.
+</p>
+
+<form method="post">
+    <input type="hidden" name="ingredienteId" th:value="${ingrediente.id}"/>
+
+    <label>Ajuste:</label>
+    <input type="number" name="quantidade" step="0.001" required/>
+
+    <button type="submit" th:formaction="@{/estoque/ajustar}">Aplicar ajuste</button>
+</form>
+
+</body>
+</html>
