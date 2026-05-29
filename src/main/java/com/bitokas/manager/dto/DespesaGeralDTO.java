@@ -6,7 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -16,6 +17,6 @@ public class DespesaGeralDTO {
     private String nome;
     private Double valor;
     @DateTimeFormat(pattern = "yyyy-MM-dd")
-    private Date dataDespesa;
+    private LocalDateTime dataDespesa;
     private Frequencia frequencia;
 }

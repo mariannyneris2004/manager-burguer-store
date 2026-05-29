@@ -1,7 +1,6 @@
 package com.bitokas.manager.controller;
 
 import com.bitokas.manager.dto.AdicionalDTO;
-import com.bitokas.manager.dto.IngredienteDTO;
 import com.bitokas.manager.service.AdicionalService;
 import com.bitokas.manager.service.IngredienteService;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +31,11 @@ public class AdicionalController {
 
     @PostMapping("/salvar")
     public String salvar(@ModelAttribute("adicional") AdicionalDTO adicionalDTO) {
-        adicionalService.cadastrar(adicionalDTO);
+        if (adicionalDTO.getId() != null){
+            adicionalService.atualizar(adicionalDTO.getId(), adicionalDTO);
+        } else {
+            adicionalService.cadastrar(adicionalDTO);
+        }
         return "redirect:/adicionais";
     }
 
@@ -43,7 +46,7 @@ public class AdicionalController {
         return "adicionais/form";
     }
 
-    @PostMapping("/{id}/excluir")
+    @GetMapping("/{id}/excluir")
     public String excluir(@PathVariable Long id) {
         adicionalService.excluir(id);
         return "redirect:/adicionais";

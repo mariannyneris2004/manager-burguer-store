@@ -24,6 +24,15 @@ public class CompraIngredienteService {
     private final EstoqueService estoqueService;
 
     public CompraIngredienteDTO registrarCompra(CompraIngredienteDTO dto) {
+        if (dto.getId() == null) {
+            return criar(dto);
+        } else {
+            return atualizar(dto);
+        }
+    }
+
+    private CompraIngredienteDTO criar(CompraIngredienteDTO dto) {
+
         CompraIngrediente compra = new CompraIngrediente();
         compra.setDataCompra(dto.getDataCompra() == null ? new Date() : dto.getDataCompra());
 
@@ -41,6 +50,36 @@ public class CompraIngredienteService {
         }
 
         return buscarPorId(compra.getId());
+    }
+
+    private CompraIngredienteDTO atualizar(CompraIngredienteDTO dto) {
+
+        CompraIngrediente compra = buscarEntidadePorId(dto.getId());
+        compra.setDataCompra(dto.getDataCompra() != null ? dto.getDataCompra() : compra.getDataCompra());
+
+        List<CompraItemDTO> itensAntigos = listarItensDaCompra(dto.getId());
+        for (CompraItemDTO item : itensAntigos) {
+            estoqueService.registrarSaida(item.getIngredienteId(), item.getQuantidade());
+        }
+
+        entityManager.createQuery("delete from CompraItem ci where ci.compraId = :id")
+                .setParameter("id", dto.getId())
+                .executeUpdate();
+
+        salvarItens(dto.getId(), dto.getItens());
+
+        if (dto.getItens() != null) {
+            for (CompraItemDTO item : dto.getItens()) {
+                estoqueService.registrarEntrada(item.getIngredienteId(), item.getQuantidade());
+            }
+        }
+
+        double total = calcularTotal(dto.getItens());
+        compra.setValorTotal(total);
+
+        entityManager.merge(compra);
+
+        return buscarPorId(dto.getId());
     }
 
     public CompraIngredienteDTO buscarPorId(Long id) {

@@ -24,13 +24,33 @@ public class RelatorioFinanceiroController {
     }
 
     @PostMapping("/financeiro")
-    public String gerarFinanceiro(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
-                                  @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fim,
-                                  Model model) {
+    public String gerarRelatorio(
+            @RequestParam("inicio")
+            @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime inicio,
 
-        model.addAttribute("relatorio", relatorioFinanceiroService.gerarResumoFinanceiro(inicio, fim));
-        model.addAttribute("inicio", inicio);
-        model.addAttribute("fim", fim);
+            @RequestParam("fim")
+            @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime fim,
+
+            Model model
+    ) {
+
+        if (inicio == null || fim == null) {
+            model.addAttribute("erro", "Datas inválidas!");
+            model.addAttribute("relatorio", new RelatorioFinanceiroDTO());
+            return "relatorios/financeiro";
+        }
+
+        if (fim.isBefore(inicio)) {
+            model.addAttribute("erro", "A data final não pode ser antes da inicial.");
+            model.addAttribute("relatorio", new RelatorioFinanceiroDTO(inicio, fim));
+            return "relatorios/financeiro";
+        }
+
+        RelatorioFinanceiroDTO resumo = relatorioFinanceiroService.gerarResumoFinanceiro(inicio, fim);
+
+        model.addAttribute("relatorio", resumo);
+        model.addAttribute("pedidos", relatorioFinanceiroService.listarPedidosPeriodo(inicio, fim));
+
         return "relatorios/financeiro";
     }
 }

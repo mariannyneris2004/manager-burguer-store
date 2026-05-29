@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Detalhes da Compra</title>
+</head>
+<body>
+
+<h1>Detalhes da Compra</h1>
+
+<p><strong>ID:</strong> <span th:text="${compra.id}"></span></p>
+<p><strong>Data:</strong> <span th:text="${compra.dataCompra}"></span></p>
+<p><strong>Valor Total:</strong> R$ <span th:text="${compra.valorTotal}"></span></p>
+
+<h3>Itens</h3>
+
+<table border="1">
+    <thead>
+    <tr>
+        <th>Ingrediente</th>
+        <th>Quantidade</th>
+        <th>Valor Unit.</th>
+        <th>Total</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="item, i : ${compra.itens}">
+        <td th:text="${ingredientes[i.index].nome}"></td>
+
+        <td th:text="${item.quantidade}"></td>
+        <td th:text="${item.valorUnitario}"></td>
+
+        <td th:text="${item.quantidade * item.valorUnitario}"></td>
+    </tr>
+    </tbody>
+</table>
+
+<a th:href="@{/compras}">Voltar</a>
+
+<form th:action="@{/compras/{id}/recalcular(id=${compra.id})}" method="post">
+    <button type="submit">Recalcular Total</button>
+</form>
+
+<form th:action="@{/compras/{id}/excluir(id=${compra.id})}" method="post">
+    <button type="submit">Excluir</button>
+</form>
+
+</body>
+</html>

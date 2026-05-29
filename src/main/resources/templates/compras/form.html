@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Cadastro de Compra</title>
+</head>
+<body>
+
+<h1 th:text="${compra.id != null ? 'Editar Compra' : 'Nova Compra'}"></h1>
+
+<form th:action="@{/compras/salvar}" th:object="${compra}" method="post">
+    <input type="hidden" th:field="*{id}">
+
+    <label>Data:</label>
+    <input type="date" th:field="*{dataCompra}" required/><br/><br/>
+
+    <!-- ===================================================== -->
+    <!-- Área de adicionar novo item                           -->
+    <!-- ===================================================== -->
+    <h3>Adicionar Item</h3>
+
+    <label>Ingrediente:</label>
+    <select id="ingredienteSelect">
+        <option value="">Selecione</option>
+        <option th:each="ing : ${ingredientesDisponiveis}"
+                th:value="${ing.id}"
+                th:text="${ing.nome}"></option>
+    </select>
+
+    <label>Qtd:</label>
+    <input type="number" id="qtdInput" min="1"/>
+
+    <label>Valor Unit.:</label>
+    <input type="number" id="valorInput" step="0.01" min="0.01"/>
+
+    <button type="button" onclick="adicionarItem()">Adicionar</button>
+
+    <br/><br/>
+
+    <!-- ===================================================== -->
+    <!-- Tabela de itens                                       -->
+    <!-- ===================================================== -->
+    <h3>Itens da Compra</h3>
+
+    <table border="1" id="tabelaItens">
+        <thead>
+        <tr>
+            <th>Ingrediente</th>
+            <th>Qtd</th>
+            <th>Valor Unit.</th>
+            <th>Total</th>
+            <th>Ações</th>
+        </tr>
+        </thead>
+
+        <tbody>
+
+        <!-- Itens existentes (modo edição) -->
+        <tr th:each="item, i : *{itens}">
+            <td>
+                <select th:field="*{itens[__${i.index}__].ingredienteId}">
+                    <option th:each="ing : ${ingredientesDisponiveis}"
+                            th:value="${ing.id}"
+                            th:text="${ing.nome}"
+                            th:selected="${ing.id == item.ingredienteId}">
+                    </option>
+                </select>
+            </td>
+
+            <td>
+                <input type="number" th:field="*{itens[__${i.index}__].quantidade}" min="1"/>
+            </td>
+
+            <td>
+                <input type="number" step="0.01" th:field="*{itens[__${i.index}__].valorUnitario}"/>
+            </td>
+
+            <td th:text="${item.quantidade * item.valorUnitario}"></td>
+
+            <td><button type="button" onclick="removerItem(this)">Excluir</button></td>
+        </tr>
+
+        </tbody>
+    </table>
+
+    <br/>
+
+    <button type="submit">Salvar</button>
+
+</form>
+
+<script>
+    let indice = document.querySelectorAll("#tabelaItens tbody tr").length;
+
+    function adicionarItem() {
+        const ingredienteSelect = document.getElementById("ingredienteSelect");
+        const ingredienteId = ingredienteSelect.value;
+        const ingredienteNome = ingredienteSelect.selectedOptions[0].text;
+        const qtd = document.getElementById("qtdInput").value;
+        const valor = document.getElementById("valorInput").value;
+
+        if (!ingredienteId || qtd <= 0 || valor <= 0) {
+            alert("Preencha todos os campos!");
+            return;
+        }
+
+        const total = (qtd * valor).toFixed(2);
+        const tbody = document.querySelector("#tabelaItens tbody");
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>
+                <select name="itens[${indice}].ingredienteId">
+                    <option value="${ingredienteId}" selected>${ingredienteNome}</option>
+                </select>
+            </td>
+
+            <td>
+                <input type="number" name="itens[${indice}].quantidade" value="${qtd}" min="1"/>
+            </td>
+
+            <td>
+                <input type="number" name="itens[${indice}].valorUnitario" value="${valor}" step="0.01"/>
+            </td>
+
+            <td>${total}</td>
+
+            <td><button type="button" onclick="removerItem(this)">Excluir</button></td>
+        `;
+
+        tbody.appendChild(tr);
+
+        indice++;
+
+        // limpar inputs
+        ingredienteSelect.value = "";
+        document.getElementById("qtdInput").value = "";
+        document.getElementById("valorInput").value = "";
+    }
+
+    function removerItem(botao) {
+        botao.closest("tr").remove();
+    }
+</script>
+
+</body>
+</html>

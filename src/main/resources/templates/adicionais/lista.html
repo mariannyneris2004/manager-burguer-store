@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Adicionais</title>
+</head>
+<body>
+
+<h1>Lista de Adicionais</h1>
+
+<a th:href="@{/adicionais/novo}">Novo Adicional</a>
+
+<table border="1">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Valor (R$)</th>
+        <th>Ações</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr th:each="adc : ${adicionais}">
+        <td th:text="${adc.id}"></td>
+        <td th:text="${adc.nome}"></td>
+        <td th:text="${adc.valorBase}"></td>
+
+        <td>
+            <a th:href="@{/adicionais/editar/{id}(id=${adc.id})}">Editar</a>
+            <a th:href="@{'/adicionais/' + ${adc.id} + '/excluir'}">Excluir</a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

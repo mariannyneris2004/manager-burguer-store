@@ -9,6 +9,7 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -23,7 +24,7 @@ public class RelatorioFinanceiroService {
 
     public Double calcularTotalVendas(LocalDateTime inicio, LocalDateTime fim) {
         return entityManager.createQuery(
-                        "select p from Pedido p where p.dataHora between :inicio and :fim",
+                        "select p from Pedido p where p.dataHora >= :inicio and p.dataHora <= :fim",
                         Pedido.class)
                 .setParameter("inicio", inicio)
                 .setParameter("fim", fim)
@@ -38,7 +39,7 @@ public class RelatorioFinanceiroService {
         Date fimDate = toDate(fim);
 
         return entityManager.createQuery(
-                        "select c from CompraIngrediente c where c.dataCompra between :inicio and :fim",
+                        "select c from CompraIngrediente c where c.dataCompra >= :inicio and c.dataCompra <= :fim",
                         CompraIngrediente.class)
                 .setParameter("inicio", inicioDate)
                 .setParameter("fim", fimDate)
@@ -48,15 +49,13 @@ public class RelatorioFinanceiroService {
                 .sum();
     }
 
+    //TODO: Não está puxando os dados do dia 01/05/2026 mesmo quando passado no filtro
     public Double calcularTotalDespesas(LocalDateTime inicio, LocalDateTime fim) {
-        Date inicioDate = toDate(inicio);
-        Date fimDate = toDate(fim);
-
         return entityManager.createQuery(
-                        "select d from DespesaGeral d where d.dataDespesa between :inicio and :fim",
+                        "select d from DespesaGeral d where d.dataDespesa >= :inicio and d.dataDespesa <= :fim",
                         DespesaGeral.class)
-                .setParameter("inicio", inicioDate)
-                .setParameter("fim", fimDate)
+                .setParameter("inicio", inicio)
+                .setParameter("fim", fim)
                 .getResultList()
                 .stream()
                 .mapToDouble(d -> n(d.getValor()))
@@ -81,7 +80,7 @@ public class RelatorioFinanceiroService {
 
     public List<Pedido> listarPedidosPeriodo(LocalDateTime inicio, LocalDateTime fim) {
         return entityManager.createQuery(
-                        "select p from Pedido p where p.dataHora between :inicio and :fim order by p.dataHora desc",
+                        "select p from Pedido p where p.dataHora >= :inicio and p.dataHora <= :fim order by p.dataHora desc",
                         Pedido.class)
                 .setParameter("inicio", inicio)
                 .setParameter("fim", fim)
@@ -90,6 +89,10 @@ public class RelatorioFinanceiroService {
 
     private Date toDate(LocalDateTime localDateTime) {
         return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+    }
+
+    private Timestamp toTimestamp(LocalDateTime localDateTime) {
+        return Timestamp.valueOf(localDateTime);
     }
 
     private double n(Double valor) {

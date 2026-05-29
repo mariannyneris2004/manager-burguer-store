@@ -1,8 +1,9 @@
 package com.bitokas.manager.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.*;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
 import java.util.List;
@@ -10,9 +11,16 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class CompraIngredienteDTO {
     private Long id;
     private Double valorTotal;
+
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date dataCompra;
+
+    @NotNull(message = "A lista de itens não pode ser nula.")
+    @Size(min = 1, message = "A compra deve conter ao menos um item.")
     private List<CompraItemDTO> itens;
 }

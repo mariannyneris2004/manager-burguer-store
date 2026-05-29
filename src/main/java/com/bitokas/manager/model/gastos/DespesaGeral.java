@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -23,7 +25,7 @@ public class DespesaGeral {
     private Double valor;
 
     @Column(name = "data_despesa")
-    private Date dataDespesa;
+    private LocalDateTime dataDespesa;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "frequencia")
