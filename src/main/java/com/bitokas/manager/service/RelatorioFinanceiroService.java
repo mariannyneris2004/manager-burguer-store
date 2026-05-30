@@ -49,7 +49,6 @@ public class RelatorioFinanceiroService {
                 .sum();
     }
 
-    //TODO: Não está puxando os dados do dia 01/05/2026 mesmo quando passado no filtro
     public Double calcularTotalDespesas(LocalDateTime inicio, LocalDateTime fim) {
         return entityManager.createQuery(
                         "select d from DespesaGeral d where d.dataDespesa >= :inicio and d.dataDespesa <= :fim",
