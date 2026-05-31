@@ -35,4 +35,9 @@ public class Pedido {
     @Column(name = "valor_pago")
     private Double valorPago;
 
+    @Column(name = "custo_total")
+    private Double custoTotal;
+
+    @Column(name = "lucro_bruto")
+    private Double lucroBruto;
 }

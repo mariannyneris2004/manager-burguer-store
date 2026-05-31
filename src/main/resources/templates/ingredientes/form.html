@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta charset="UTF-8"/>
     <title>Ingrediente</title>
 </head>
 <body>
@@ -12,16 +13,19 @@
     <input type="hidden" th:field="*{id}" />
 
     <label>Nome:</label>
-    <input type="text" th:field="*{nome}" required /><br/>
+    <input type="text" th:field="*{nome}" required /><br/><br/>
 
     <label>Marca:</label>
-    <input type="text" th:field="*{marca}" /><br/>
+    <input type="text" th:field="*{marca}" /><br/><br/>
 
-    <label>Medida unitária:</label>
-    <input type="text" th:field="*{medidaUnitaria}" placeholder="Ex: g, ml, unidade" /><br/>
+    <label>Unidade de consumo:</label>
+    <input type="text" th:field="*{unidadeConsumo}" placeholder="UNIDADE, G, ML, FATIA" /><br/><br/>
 
-    <label>Valor (R$):</label>
-    <input type="number" step="0.01" th:field="*{valor}" required /><br/>
+    <label>Unidade de compra:</label>
+    <input type="text" th:field="*{unidadeCompra}" placeholder="PACOTE, CAIXA, FARDO" /><br/><br/>
+
+    <label>Quantidade por unidade de compra:</label>
+    <input type="number" step="0.001" min="0" th:field="*{quantidadePorUnidadeCompra}" placeholder="Ex.: 6" /><br/><br/>
 
     <button type="submit">Salvar</button>
     <a th:href="@{/ingredientes}">Cancelar</a>

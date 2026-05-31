@@ -11,4 +11,6 @@ public class EstoqueDTO {
     private Long id;
     private Long ingredienteId;
     private Double quantidade;
+    private Double custoMedioAtual;
+    private Double valorTotalEstoque;
 }

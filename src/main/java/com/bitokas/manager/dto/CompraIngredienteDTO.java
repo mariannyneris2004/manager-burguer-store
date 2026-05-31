@@ -20,7 +20,7 @@ public class CompraIngredienteDTO {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date dataCompra;
 
-    @NotNull(message = "A lista de itens não pode ser nula.")
-    @Size(min = 1, message = "A compra deve conter ao menos um item.")
+    @NotNull
+    @Size(min = 1)
     private List<CompraItemDTO> itens;
 }

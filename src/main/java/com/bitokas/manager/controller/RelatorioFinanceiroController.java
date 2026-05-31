@@ -33,7 +33,6 @@ public class RelatorioFinanceiroController {
 
             Model model
     ) {
-
         if (inicio == null || fim == null) {
             model.addAttribute("erro", "Datas inválidas!");
             model.addAttribute("relatorio", new RelatorioFinanceiroDTO());

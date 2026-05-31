@@ -12,5 +12,9 @@ public class CompraItemDTO {
     private Long compraId;
     private Long ingredienteId;
     private Double quantidade;
+    private Double unidadesPorEmbalagem;
+    private Double quantidadeEstoque;
     private Double valorUnitario;
+    private Double custoUnitarioEstoque;
+    private Double valorTotalItem;
 }

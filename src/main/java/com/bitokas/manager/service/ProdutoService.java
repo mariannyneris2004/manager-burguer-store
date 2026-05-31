@@ -3,6 +3,7 @@ package com.bitokas.manager.service;
 import com.bitokas.manager.dto.ProdutoAdicionalDTO;
 import com.bitokas.manager.dto.ProdutoDTO;
 import com.bitokas.manager.dto.ProdutoIngredienteDTO;
+import com.bitokas.manager.model.gastos.Estoque;
 import com.bitokas.manager.model.produtos.Produto;
 import com.bitokas.manager.model.produtos.ProdutoAdicional;
 import com.bitokas.manager.model.produtos.ProdutoIngrediente;
@@ -21,19 +22,7 @@ public class ProdutoService {
     private EntityManager entityManager;
 
     public ProdutoDTO cadastrar(ProdutoDTO dto) {
-        if (dto.getIngredientes() != null) {
-            dto.getIngredientes().removeIf(a ->
-                    a.getIngredienteId() == null
-                            || !Boolean.TRUE.equals(a.getSelecionado())
-            );
-        }
-
-        if (dto.getAdicionaisPermitidos() != null) {
-            dto.getAdicionaisPermitidos().removeIf(a ->
-                    a.getAdicionalId() == null
-                            || !Boolean.TRUE.equals(a.getSelecionado())
-            );
-        }
+        normalizarSelecao(dto);
 
         Produto produto = new Produto();
         produto.setNome(dto.getNome());
@@ -56,23 +45,11 @@ public class ProdutoService {
         produto.setCategoria(dto.getCategoria());
         entityManager.merge(produto);
 
-        if (dto.getIngredientes() != null) {
-            dto.getIngredientes().removeIf(a ->
-                    a.getIngredienteId() == null
-                            || !Boolean.TRUE.equals(a.getSelecionado())
-            );
-        }
+        normalizarSelecao(dto);
 
         entityManager.createQuery("delete from ProdutoIngrediente pi where pi.produtoId = :produtoId")
                 .setParameter("produtoId", id)
                 .executeUpdate();
-
-        if (dto.getAdicionaisPermitidos() != null) {
-            dto.getAdicionaisPermitidos().removeIf(a ->
-                    a.getAdicionalId() == null
-                            || !Boolean.TRUE.equals(a.getSelecionado())
-            );
-        }
 
         entityManager.createQuery("delete from ProdutoAdicional pa where pa.produtoId = :produtoId")
                 .setParameter("produtoId", id)
@@ -143,28 +120,45 @@ public class ProdutoService {
                 .toList();
     }
 
-    private void salvarIngredientesDoProduto(Long produtoId, List<ProdutoIngredienteDTO> ingredientes) {
+    public Double calcularCustoProduto(Long produtoId) {
+        double total = 0d;
 
+        List<ProdutoIngrediente> itens = entityManager.createQuery(
+                        "select pi from ProdutoIngrediente pi where pi.produtoId = :produtoId",
+                        ProdutoIngrediente.class)
+                .setParameter("produtoId", produtoId)
+                .getResultList();
+
+        for (ProdutoIngrediente item : itens) {
+            Estoque estoque = entityManager.createQuery(
+                            "select e from Estoque e where e.ingredienteId = :ingredienteId",
+                            Estoque.class)
+                    .setParameter("ingredienteId", item.getIngredienteId())
+                    .getResultStream()
+                    .findFirst()
+                    .orElse(null);
+
+            double custoMedio = estoque == null ? 0d : n(estoque.getCustoMedioAtual());
+            total += n(item.getQuantidade()) * custoMedio;
+        }
+
+        return total;
+    }
+
+    private void salvarIngredientesDoProduto(Long produtoId, List<ProdutoIngredienteDTO> ingredientes) {
         if (ingredientes == null) {
             return;
         }
 
         for (ProdutoIngredienteDTO item : ingredientes) {
-
-            if (!Boolean.TRUE.equals(item.getSelecionado())) {
-                continue;
-            }
-
-            if (item.getIngredienteId() == null) {
+            if (item.getIngredienteId() == null || !Boolean.TRUE.equals(item.getSelecionado())) {
                 continue;
             }
 
             ProdutoIngrediente pi = new ProdutoIngrediente();
-
             pi.setProdutoId(produtoId);
             pi.setIngredienteId(item.getIngredienteId());
             pi.setQuantidade(item.getQuantidade());
-
             entityManager.persist(pi);
         }
     }
@@ -175,20 +169,13 @@ public class ProdutoService {
         }
 
         for (ProdutoAdicionalDTO item : adicionais) {
-
-            if (!Boolean.TRUE.equals(item.getSelecionado())) {
-                continue;
-            }
-
-            if (item.getAdicionalId() == null) {
+            if (item.getAdicionalId() == null || !Boolean.TRUE.equals(item.getSelecionado())) {
                 continue;
             }
 
             ProdutoAdicional pa = new ProdutoAdicional();
-
             pa.setProdutoId(produtoId);
             pa.setAdicionalId(item.getAdicionalId());
-
             entityManager.persist(pa);
         }
     }
@@ -202,11 +189,18 @@ public class ProdutoService {
     }
 
     private ProdutoDTO toDTOCompleto(Produto produto) {
+        double custo = calcularCustoProduto(produto.getId());
+        double lucro = n(produto.getValorVenda()) - custo;
+        double margem = n(produto.getValorVenda()) == 0 ? 0d : (lucro / n(produto.getValorVenda())) * 100;
+
         return new ProdutoDTO(
                 produto.getId(),
                 produto.getNome(),
                 produto.getValorVenda(),
                 produto.getCategoria(),
+                custo,
+                lucro,
+                margem,
                 listarIngredientesDoProduto(produto.getId()),
                 listarAdicionaisPermitidos(produto.getId())
         );
@@ -229,5 +223,19 @@ public class ProdutoService {
                 item.getAdicionalId(),
                 true
         );
+    }
+
+    private void normalizarSelecao(ProdutoDTO dto) {
+        if (dto.getIngredientes() != null) {
+            dto.getIngredientes().removeIf(a -> a.getIngredienteId() == null || !Boolean.TRUE.equals(a.getSelecionado()));
+        }
+
+        if (dto.getAdicionaisPermitidos() != null) {
+            dto.getAdicionaisPermitidos().removeIf(a -> a.getAdicionalId() == null || !Boolean.TRUE.equals(a.getSelecionado()));
+        }
+    }
+
+    private double n(Double valor) {
+        return valor == null ? 0d : valor;
     }
 }

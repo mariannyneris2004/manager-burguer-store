@@ -33,6 +33,7 @@ public class CompraIngredienteController {
     public String novo(Model model) {
         CompraIngredienteDTO compraIngredienteDTO = new CompraIngredienteDTO();
         compraIngredienteDTO.setItens(new ArrayList<>());
+
         model.addAttribute("compra", compraIngredienteDTO);
         model.addAttribute("ingredientesDisponiveis", ingredienteService.listarTodos());
         return "compras/form";
@@ -44,7 +45,6 @@ public class CompraIngredienteController {
             BindingResult result,
             Model model
     ) {
-
         if (result.hasErrors()) {
             model.addAttribute("ingredientesDisponiveis", ingredienteService.listarTodos());
             return "compras/form";
@@ -54,44 +54,17 @@ public class CompraIngredienteController {
         return "redirect:/compras";
     }
 
-    @GetMapping("/editar/{id}")
-    public String editar(@PathVariable Long id, Model model) {
-
-        CompraIngredienteDTO compra = compraIngredienteService.buscarPorId(id);
-
-        if (compra.getItens() == null) {
-            compra.setItens(new ArrayList<>());
-        }
-
-        model.addAttribute("compra", compra);
-        model.addAttribute("ingredientesDisponiveis", ingredienteService.listarTodos());
-
-        return "compras/form";
-    }
-
     @GetMapping("/{id}")
     public String detalhes(@PathVariable Long id, Model model) {
         CompraIngredienteDTO compra = compraIngredienteService.buscarPorId(id);
 
         List<IngredienteDTO> ingredientes = new ArrayList<>();
-        for (CompraItemDTO item : compra.getItens()){
+        for (CompraItemDTO item : compra.getItens()) {
             ingredientes.add(ingredienteService.buscarPorId(item.getIngredienteId()));
         }
 
         model.addAttribute("compra", compra);
         model.addAttribute("ingredientes", ingredientes);
         return "compras/detalhe";
-    }
-
-    @PostMapping("/{id}/recalcular")
-    public String recalcular(@PathVariable Long id) {
-        compraIngredienteService.recalcularValorTotal(id);
-        return "redirect:/compras/" + id;
-    }
-
-    @GetMapping("/{id}/excluir")
-    public String excluir(@PathVariable Long id) {
-        compraIngredienteService.excluir(id);
-        return "redirect:/compras";
     }
 }

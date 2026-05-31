@@ -1,20 +1,26 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta charset="UTF-8"/>
     <title>Compras</title>
 </head>
 <body>
 
 <h1>Lista de Compras</h1>
 
-<a th:href="@{/compras/novo}">Nova Compra</a>
+<p>
+    <a th:href="@{/compras/novo}">Nova Compra</a>
+    |
+    <a th:href="@{/estoque}">Ver estoque</a>
+</p>
 
 <table border="1">
     <thead>
     <tr>
         <th>ID</th>
         <th>Data</th>
-        <th>Valor Total (R$)</th>
+        <th>Valor Total</th>
+        <th>Itens</th>
         <th>Ações</th>
     </tr>
     </thead>
@@ -24,11 +30,10 @@
         <td th:text="${compra.id}"></td>
         <td th:text="${compra.dataCompra != null ? #dates.format(compra.dataCompra, 'dd/MM/yyyy') : ''}"></td>
         <td th:text="${compra.valorTotal}"></td>
+        <td th:text="${compra.itens != null ? compra.itens.size() : 0}"></td>
 
         <td>
             <a th:href="@{/compras/{id}(id=${compra.id})}">Detalhes</a>
-            <a th:href="@{'/compras/editar/' + ${compra.id}}">Editar</a>
-            <a th:href="@{'/compras/' + ${compra.id} + '/excluir'}">Excluir</a>
         </td>
     </tr>
     </tbody>

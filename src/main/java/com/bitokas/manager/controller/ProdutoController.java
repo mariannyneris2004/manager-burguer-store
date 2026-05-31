@@ -29,7 +29,6 @@ public class ProdutoController {
 
     @GetMapping("/novo")
     public String novo(Model model) {
-
         ProdutoDTO dto = new ProdutoDTO();
 
         List<ProdutoIngredienteDTO> ingredientes = ingredienteService
@@ -45,6 +44,7 @@ public class ProdutoController {
                 .toList();
 
         dto.setIngredientes(new ArrayList<>(ingredientes));
+
         List<ProdutoAdicionalDTO> adicionais = adicionalService
                 .listarTodos()
                 .stream()
@@ -67,7 +67,6 @@ public class ProdutoController {
 
     @PostMapping("/salvar")
     public String salvar(@ModelAttribute("produto") ProdutoDTO produtoDTO) {
-
         if (produtoDTO.getId() != null) {
             produtoService.atualizar(produtoDTO.getId(), produtoDTO);
         } else {
@@ -79,24 +78,18 @@ public class ProdutoController {
 
     @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model) {
-
         ProdutoDTO dto = produtoService.buscarPorId(id);
-
         List<IngredienteDTO> disponiveis = ingredienteService.listarTodos();
 
         List<ProdutoIngredienteDTO> ingredientesTela = new ArrayList<>();
-
         for (IngredienteDTO ingrediente : disponiveis) {
-
             ProdutoIngredienteDTO existente =
-                    dto.getIngredientes()
-                            .stream()
+                    dto.getIngredientes().stream()
                             .filter(i -> i.getIngredienteId().equals(ingrediente.getId()))
                             .findFirst()
                             .orElse(null);
 
             ProdutoIngredienteDTO item = new ProdutoIngredienteDTO();
-
             item.setIngredienteId(ingrediente.getId());
 
             if (existente != null) {
@@ -111,22 +104,17 @@ public class ProdutoController {
 
             ingredientesTela.add(item);
         }
-
         dto.setIngredientes(ingredientesTela);
 
         List<ProdutoAdicionalDTO> adicionaisTela = new ArrayList<>();
-
         for (AdicionalDTO adicional : adicionalService.listarTodos()) {
-
             ProdutoAdicionalDTO existente =
-                    dto.getAdicionaisPermitidos()
-                            .stream()
+                    dto.getAdicionaisPermitidos().stream()
                             .filter(a -> a.getAdicionalId().equals(adicional.getId()))
                             .findFirst()
                             .orElse(null);
 
             ProdutoAdicionalDTO item = new ProdutoAdicionalDTO();
-
             item.setAdicionalId(adicional.getId());
 
             if (existente != null) {
@@ -139,7 +127,6 @@ public class ProdutoController {
 
             adicionaisTela.add(item);
         }
-
         dto.setAdicionaisPermitidos(adicionaisTela);
 
         model.addAttribute("produto", dto);

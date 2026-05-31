@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.List;
 
 @Controller
 @RequestMapping("/pedidos")
@@ -33,7 +32,6 @@ public class PedidoController {
 
     @GetMapping("/novo")
     public String novo(Model model) {
-
         PedidoDTO dto = new PedidoDTO();
 
         dto.setProdutos(
@@ -41,11 +39,9 @@ public class PedidoController {
                         .stream()
                         .map(p -> {
                             PedidoProdutoDTO item = new PedidoProdutoDTO();
-
                             item.setProdutoId(p.getId());
                             item.setQuantidade(0);
                             item.setSelecionado(false);
-
                             return item;
                         })
                         .toList()
@@ -56,11 +52,9 @@ public class PedidoController {
                         .stream()
                         .map(a -> {
                             PedidoAdicionalDTO item = new PedidoAdicionalDTO();
-
                             item.setAdicionalId(a.getId());
                             item.setQuantidade(0);
                             item.setSelecionado(false);
-
                             return item;
                         })
                         .toList()
@@ -76,7 +70,7 @@ public class PedidoController {
 
     @PostMapping("/salvar")
     public String salvar(@ModelAttribute("pedido") PedidoDTO pedidoDTO) {
-        if (pedidoDTO.getId() != null){
+        if (pedidoDTO.getId() != null) {
             pedidoService.atualizar(pedidoDTO.getId(), pedidoDTO);
         } else {
             pedidoService.registrarPedido(pedidoDTO);
@@ -86,22 +80,16 @@ public class PedidoController {
 
     @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model) {
-
         PedidoDTO dto = pedidoService.buscarPorId(id);
 
-        List<PedidoProdutoDTO> produtosTela = new ArrayList<>();
-
+        var produtosTela = new ArrayList<PedidoProdutoDTO>();
         produtoService.listarTodos().forEach(produto -> {
-
-            PedidoProdutoDTO existente =
-                    dto.getProdutos()
-                            .stream()
-                            .filter(p -> p.getProdutoId().equals(produto.getId()))
-                            .findFirst()
-                            .orElse(null);
+            PedidoProdutoDTO existente = dto.getProdutos().stream()
+                    .filter(p -> p.getProdutoId().equals(produto.getId()))
+                    .findFirst()
+                    .orElse(null);
 
             PedidoProdutoDTO item = new PedidoProdutoDTO();
-
             item.setProdutoId(produto.getId());
 
             if (existente != null) {
@@ -116,22 +104,16 @@ public class PedidoController {
 
             produtosTela.add(item);
         });
-
         dto.setProdutos(produtosTela);
 
-        List<PedidoAdicionalDTO> adicionaisTela = new ArrayList<>();
-
+        var adicionaisTela = new ArrayList<PedidoAdicionalDTO>();
         adicionalService.listarTodos().forEach(adicional -> {
-
-            PedidoAdicionalDTO existente =
-                    dto.getAdicionais()
-                            .stream()
-                            .filter(a -> a.getAdicionalId().equals(adicional.getId()))
-                            .findFirst()
-                            .orElse(null);
+            PedidoAdicionalDTO existente = dto.getAdicionais().stream()
+                    .filter(a -> a.getAdicionalId().equals(adicional.getId()))
+                    .findFirst()
+                    .orElse(null);
 
             PedidoAdicionalDTO item = new PedidoAdicionalDTO();
-
             item.setAdicionalId(adicional.getId());
 
             if (existente != null) {
@@ -146,7 +128,6 @@ public class PedidoController {
 
             adicionaisTela.add(item);
         });
-
         dto.setAdicionais(adicionaisTela);
 
         model.addAttribute("pedido", dto);
@@ -160,23 +141,7 @@ public class PedidoController {
     @GetMapping("/{id}")
     public String detalhes(@PathVariable Long id, Model model) {
         model.addAttribute("pedido", pedidoService.buscarPorId(id));
-        return "lista";
-    }
-
-    @GetMapping("/periodo")
-    public String listarPorPeriodo(@RequestParam LocalDateTime inicio,
-                                   @RequestParam LocalDateTime fim,
-                                   Model model) {
-        model.addAttribute("pedidos", pedidoService.listarPorPeriodo(inicio, fim));
-        model.addAttribute("inicio", inicio);
-        model.addAttribute("fim", fim);
-        return "pedidos/lista";
-    }
-
-    @PostMapping("/{id}/cancelar")
-    public String cancelar(@PathVariable Long id) {
-        pedidoService.cancelarPedido(id);
-        return "redirect:/pedidos";
+        return "pedidos/detalhe";
     }
 
     @PostMapping("/calcular-total")
@@ -187,6 +152,12 @@ public class PedidoController {
         model.addAttribute("produtosDisponiveis", produtoService.listarTodos());
         model.addAttribute("adicionaisDisponiveis", adicionalService.listarTodos());
         return "pedidos/form";
+    }
+
+    @PostMapping("/{id}/cancelar")
+    public String cancelar(@PathVariable Long id) {
+        pedidoService.cancelarPedido(id);
+        return "redirect:/pedidos";
     }
 
     @PostMapping("/{id}/excluir")

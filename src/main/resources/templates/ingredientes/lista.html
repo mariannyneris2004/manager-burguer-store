@@ -1,12 +1,24 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta charset="UTF-8"/>
     <title>Ingredientes</title>
 </head>
 <body>
 <h1>Lista de Ingredientes</h1>
 
-<a th:href="@{/ingredientes/novo}">Novo Ingrediente</a>
+<p>
+    <a th:href="@{/ingredientes/novo}">Novo Ingrediente</a>
+    |
+    <a th:href="@{/estoque}">Ver estoque</a>
+</p>
+
+<form th:action="@{/ingredientes/buscar}" method="get">
+    <input type="text" name="nome" placeholder="Buscar por nome"/>
+    <button type="submit">Buscar</button>
+</form>
+
+<br/>
 
 <table border="1">
     <thead>
@@ -14,8 +26,12 @@
         <th>ID</th>
         <th>Nome</th>
         <th>Marca</th>
-        <th>Medida</th>
-        <th>Valor (R$)</th>
+        <th>Consumo</th>
+        <th>Compra</th>
+        <th>Qtd/Compra</th>
+        <th>Estoque</th>
+        <th>Custo médio</th>
+        <th>Valor em estoque</th>
         <th>Ações</th>
     </tr>
     </thead>
@@ -25,8 +41,12 @@
         <td th:text="${ing.id}"></td>
         <td th:text="${ing.nome}"></td>
         <td th:text="${ing.marca}"></td>
-        <td th:text="${ing.medidaUnitaria}"></td>
-        <td th:text="${ing.valor}"></td>
+        <td th:text="${ing.unidadeConsumo}"></td>
+        <td th:text="${ing.unidadeCompra}"></td>
+        <td th:text="${ing.quantidadePorUnidadeCompra}"></td>
+        <td th:text="${ing.estoqueAtual}"></td>
+        <td th:text="${ing.custoMedioAtual}"></td>
+        <td th:text="${ing.valorTotalEstoque}"></td>
 
         <td>
             <a th:href="@{'/ingredientes/editar/' + ${ing.id}}">Editar</a>

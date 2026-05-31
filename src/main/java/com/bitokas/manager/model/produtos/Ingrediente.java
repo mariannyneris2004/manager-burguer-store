@@ -14,16 +14,18 @@ public class Ingrediente {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "nome")
+    @Column(name = "nome", nullable = false)
     private String nome;
 
     @Column(name = "marca")
     private String marca;
 
-    @Column(name = "medida_unitaria")
-    private String medidaUnitaria;
+    @Column(name = "unidade_consumo")
+    private String unidadeConsumo; // UNIDADE, G, ML, FATIA etc.
 
-    @Column
-    private Double valor;
+    @Column(name = "unidade_compra")
+    private String unidadeCompra; // PACOTE, CAIXA etc.
 
+    @Column(name = "quantidade_por_unidade_compra")
+    private Double quantidadePorUnidadeCompra;
 }

@@ -14,8 +14,10 @@ public class RelatorioFinanceiroDTO {
     private LocalDateTime fim;
     private Double totalVendas;
     private Double totalCompras;
+    private Double cmv;
     private Double totalDespesas;
-    private Double lucro;
+    private Double lucroBruto;
+    private Double lucroLiquido;
 
     public RelatorioFinanceiroDTO(LocalDateTime inicio, LocalDateTime fim) {
         this.inicio = inicio;

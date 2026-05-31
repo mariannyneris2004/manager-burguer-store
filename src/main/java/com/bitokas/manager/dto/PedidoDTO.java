@@ -19,6 +19,8 @@ public class PedidoDTO {
     private Double valorEntrega;
     private Double valorTotal;
     private Double valorPago;
+    private Double custoTotal;
+    private Double lucroBruto;
     private List<PedidoProdutoDTO> produtos;
     private List<PedidoAdicionalDTO> adicionais;
 }

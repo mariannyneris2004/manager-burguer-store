@@ -1,6 +1,7 @@
 package com.bitokas.manager.service;
 
 import com.bitokas.manager.dto.IngredienteDTO;
+import com.bitokas.manager.model.gastos.Estoque;
 import com.bitokas.manager.model.produtos.Ingrediente;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -20,8 +21,9 @@ public class IngredienteService {
         Ingrediente ingrediente = new Ingrediente();
         ingrediente.setNome(dto.getNome());
         ingrediente.setMarca(dto.getMarca());
-        ingrediente.setMedidaUnitaria(dto.getMedidaUnitaria());
-        ingrediente.setValor(dto.getValor());
+        ingrediente.setUnidadeConsumo(defaultString(dto.getUnidadeConsumo(), "UNIDADE"));
+        ingrediente.setUnidadeCompra(defaultString(dto.getUnidadeCompra(), "PACOTE"));
+        ingrediente.setQuantidadePorUnidadeCompra(defaultNumber(dto.getQuantidadePorUnidadeCompra(), 1d));
 
         entityManager.persist(ingrediente);
         entityManager.flush();
@@ -33,8 +35,9 @@ public class IngredienteService {
         Ingrediente ingrediente = buscarEntidadePorId(id);
         ingrediente.setNome(dto.getNome());
         ingrediente.setMarca(dto.getMarca());
-        ingrediente.setMedidaUnitaria(dto.getMedidaUnitaria());
-        ingrediente.setValor(dto.getValor());
+        ingrediente.setUnidadeConsumo(defaultString(dto.getUnidadeConsumo(), "UNIDADE"));
+        ingrediente.setUnidadeCompra(defaultString(dto.getUnidadeCompra(), "PACOTE"));
+        ingrediente.setQuantidadePorUnidadeCompra(defaultNumber(dto.getQuantidadePorUnidadeCompra(), 1d));
 
         entityManager.merge(ingrediente);
         return toDTO(ingrediente);
@@ -97,12 +100,38 @@ public class IngredienteService {
     }
 
     private IngredienteDTO toDTO(Ingrediente ingrediente) {
+        Estoque estoque = entityManager.createQuery(
+                        "select e from Estoque e where e.ingredienteId = :id", Estoque.class)
+                .setParameter("id", ingrediente.getId())
+                .getResultStream()
+                .findFirst()
+                .orElse(null);
+
+        double quantidade = estoque != null ? n(estoque.getQuantidade()) : 0d;
+        double custoMedio = estoque != null ? n(estoque.getCustoMedioAtual()) : 0d;
+
         return new IngredienteDTO(
                 ingrediente.getId(),
                 ingrediente.getNome(),
                 ingrediente.getMarca(),
-                ingrediente.getMedidaUnitaria(),
-                ingrediente.getValor()
+                ingrediente.getUnidadeConsumo(),
+                ingrediente.getUnidadeCompra(),
+                ingrediente.getQuantidadePorUnidadeCompra(),
+                quantidade,
+                custoMedio,
+                quantidade * custoMedio
         );
+    }
+
+    private double n(Double valor) {
+        return valor == null ? 0d : valor;
+    }
+
+    private Double defaultNumber(Double valor, Double fallback) {
+        return valor == null ? fallback : valor;
+    }
+
+    private String defaultString(String valor, String fallback) {
+        return valor == null || valor.isBlank() ? fallback : valor;
     }
 }

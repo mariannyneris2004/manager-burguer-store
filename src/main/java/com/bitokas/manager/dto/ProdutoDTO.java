@@ -14,6 +14,9 @@ public class ProdutoDTO {
     private String nome;
     private Double valorVenda;
     private String categoria;
+    private Double custoUnitario;
+    private Double lucroUnitario;
+    private Double margemPercentual;
     private List<ProdutoIngredienteDTO> ingredientes;
     private List<ProdutoAdicionalDTO> adicionaisPermitidos;
 }

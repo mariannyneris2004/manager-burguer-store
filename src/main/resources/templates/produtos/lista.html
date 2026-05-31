@@ -1,13 +1,18 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta charset="UTF-8"/>
     <title>Produtos</title>
 </head>
 <body>
 
 <h1>Lista de Produtos</h1>
 
-<a th:href="@{/produtos/novo}">Novo Produto</a>
+<p>
+    <a th:href="@{/produtos/novo}">Novo Produto</a>
+    |
+    <a th:href="@{/compras}">Compras</a>
+</p>
 
 <table border="1">
     <thead>
@@ -16,6 +21,9 @@
         <th>Nome</th>
         <th>Categoria</th>
         <th>Valor de Venda</th>
+        <th>Custo</th>
+        <th>Lucro</th>
+        <th>Margem %</th>
         <th>Ações</th>
     </tr>
     </thead>
@@ -26,6 +34,9 @@
         <td th:text="${p.nome}"></td>
         <td th:text="${p.categoria}"></td>
         <td th:text="${p.valorVenda}"></td>
+        <td th:text="${p.custoUnitario}"></td>
+        <td th:text="${p.lucroUnitario}"></td>
+        <td th:text="${#numbers.formatDecimal(p.margemPercentual, 1, 2)}"></td>
 
         <td>
             <a th:href="@{'/produtos/editar/' + ${p.id}}">Editar</a>
@@ -38,7 +49,6 @@
         </td>
     </tr>
     </tbody>
-
 </table>
 
 </body>

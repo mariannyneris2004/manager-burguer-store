@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Pedido</title>
+</head>
+<body>
+
+<h1>Detalhes do Pedido</h1>
+
+<p><a th:href="@{/pedidos}">Voltar</a></p>
+
+<p><strong>ID:</strong> <span th:text="${pedido.id}"></span></p>
+<p><strong>Cliente:</strong> <span th:text="${pedido.nomeCliente}"></span></p>
+<p><strong>Data/Hora:</strong> <span th:text="${pedido.dataHora}"></span></p>
+<p><strong>Total:</strong> <span th:text="${pedido.valorTotal}"></span></p>
+<p><strong>Custo total:</strong> <span th:text="${pedido.custoTotal}"></span></p>
+<p><strong>Lucro bruto:</strong> <span th:text="${pedido.lucroBruto}"></span></p>
+<p><strong>Valor pago:</strong> <span th:text="${pedido.valorPago}"></span></p>
+<p><strong>Entrega/Retirada:</strong> <span th:text="${pedido.tipoEntrega}"></span></p>
+
+<h3>Produtos</h3>
+<table border="1">
+    <thead>
+    <tr>
+        <th>Produto</th>
+        <th>Qtd</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="item : ${pedido.produtos}">
+        <td th:text="${item.produtoId}"></td>
+        <td th:text="${item.quantidade}"></td>
+    </tr>
+    </tbody>
+</table>
+
+<h3>Adicionais</h3>
+<table border="1">
+    <thead>
+    <tr>
+        <th>Adicional</th>
+        <th>Qtd</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="item : ${pedido.adicionais}">
+        <td th:text="${item.adicionalId}"></td>
+        <td th:text="${item.quantidade}"></td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

@@ -33,24 +33,7 @@ public class PedidoService {
             throw new IllegalArgumentException("O pedido precisa ter ao menos um produto.");
         }
 
-        dto.setProdutos(
-                dto.getProdutos().stream()
-                        .filter(p ->
-                                p.getProdutoId() != null
-                                        && Boolean.TRUE.equals(p.getSelecionado())
-                        )
-                        .toList()
-        );
-
-        dto.setAdicionais(
-                dto.getAdicionais() == null ? null :
-                        dto.getAdicionais().stream()
-                        .filter(a ->
-                                a.getAdicionalId() != null
-                                && Boolean.TRUE.equals(a.getSelecionado())
-                        )
-                        .toList()
-        );
+        filtrarSelecionados(dto);
 
         Pedido pedido = new Pedido();
         pedido.setNomeCliente(dto.getNomeCliente());
@@ -68,7 +51,10 @@ public class PedidoService {
         salvarProdutosDoPedido(pedido.getId(), dto.getProdutos());
         salvarAdicionaisDoPedido(pedido.getId(), dto.getAdicionais());
 
-        baixarEstoqueDoPedido(pedido.getId());
+        double custoTotal = baixarEstoqueDoPedido(pedido.getId());
+        pedido.setCustoTotal(custoTotal);
+        pedido.setLucroBruto(pedido.getValorTotal() - custoTotal);
+        entityManager.merge(pedido);
 
         return buscarPorId(pedido.getId());
     }
@@ -103,28 +89,30 @@ public class PedidoService {
 
         if (dto.getProdutos() != null) {
             for (PedidoProdutoDTO item : dto.getProdutos()) {
-
                 if (!Boolean.TRUE.equals(item.getSelecionado())) {
                     continue;
                 }
+
                 Produto produto = entityManager.find(Produto.class, item.getProdutoId());
                 if (produto == null) {
                     throw new IllegalArgumentException("Produto não encontrado: " + item.getProdutoId());
                 }
+
                 total += n(produto.getValorVenda()) * n(item.getQuantidade());
             }
         }
 
         if (dto.getAdicionais() != null) {
             for (PedidoAdicionalDTO item : dto.getAdicionais()) {
-
                 if (!Boolean.TRUE.equals(item.getSelecionado())) {
                     continue;
                 }
+
                 Adicional adicional = entityManager.find(Adicional.class, item.getAdicionalId());
                 if (adicional == null) {
                     throw new IllegalArgumentException("Adicional não encontrado: " + item.getAdicionalId());
                 }
+
                 total += n(adicional.getValorBase()) * n(item.getQuantidade());
             }
         }
@@ -136,6 +124,52 @@ public class PedidoService {
         return total;
     }
 
+    public PedidoDTO atualizar(Long id, PedidoDTO dto) {
+        Pedido pedido = buscarEntidadePorId(id);
+
+        List<PedidoProduto> produtosAntigos = listarProdutosEntidadeDoPedido(id);
+        List<PedidoAdicional> adicionaisAntigos = listarAdicionaisEntidadeDoPedido(id);
+
+        for (PedidoProduto item : produtosAntigos) {
+            estoqueService.devolverIngredientesDoProduto(item.getProdutoId(), item.getQuantidade(), id);
+        }
+
+        for (PedidoAdicional item : adicionaisAntigos) {
+            estoqueService.devolverIngredientesDoAdicional(item.getAdicionalId(), item.getQuantidade(), id);
+        }
+
+        entityManager.createQuery("delete from PedidoProduto pp where pp.pedidoId = :pedidoId")
+                .setParameter("pedidoId", id)
+                .executeUpdate();
+
+        entityManager.createQuery("delete from PedidoAdicional pa where pa.pedidoId = :pedidoId")
+                .setParameter("pedidoId", id)
+                .executeUpdate();
+
+        pedido.setNomeCliente(dto.getNomeCliente());
+        pedido.setTipoEntrega(dto.getTipoEntrega());
+        pedido.setValorEntrega(dto.getValorEntrega());
+        pedido.setDataHora(dto.getDataHora() == null ? pedido.getDataHora() : dto.getDataHora());
+
+        filtrarSelecionados(dto);
+
+        double valorTotal = calcularValorTotal(dto);
+        pedido.setValorTotal(valorTotal);
+        pedido.setValorPago(dto.getValorPago() == null ? valorTotal : dto.getValorPago());
+
+        entityManager.merge(pedido);
+
+        salvarProdutosDoPedido(id, dto.getProdutos());
+        salvarAdicionaisDoPedido(id, dto.getAdicionais());
+
+        double custoTotal = baixarEstoqueDoPedido(id);
+        pedido.setCustoTotal(custoTotal);
+        pedido.setLucroBruto(pedido.getValorTotal() - custoTotal);
+        entityManager.merge(pedido);
+
+        return buscarPorId(id);
+    }
+
     public void cancelarPedido(Long id) {
         Pedido pedido = buscarEntidadePorId(id);
 
@@ -143,11 +177,11 @@ public class PedidoService {
         List<PedidoAdicional> adicionais = listarAdicionaisEntidadeDoPedido(id);
 
         for (PedidoProduto item : produtos) {
-            estoqueService.registrarEntradaPorProduto(item.getProdutoId(), item.getQuantidade());
+            estoqueService.devolverIngredientesDoProduto(item.getProdutoId(), item.getQuantidade(), id);
         }
 
         for (PedidoAdicional item : adicionais) {
-            estoqueService.registrarEntradaPorAdicional(item.getAdicionalId(), item.getQuantidade());
+            estoqueService.devolverIngredientesDoAdicional(item.getAdicionalId(), item.getQuantidade(), id);
         }
 
         entityManager.createQuery("delete from PedidoProduto pp where pp.pedidoId = :pedidoId")
@@ -161,37 +195,51 @@ public class PedidoService {
         entityManager.remove(entityManager.contains(pedido) ? pedido : entityManager.merge(pedido));
     }
 
-    public void baixarEstoqueDoPedido(Long pedidoId) {
-        List<PedidoProduto> produtos = listarProdutosEntidadeDoPedido(pedidoId);
-        List<PedidoAdicional> adicionais = listarAdicionaisEntidadeDoPedido(pedidoId);
+    public Double baixarEstoqueDoPedido(Long pedidoId) {
+        double custoTotal = 0d;
 
+        List<PedidoProduto> produtos = listarProdutosEntidadeDoPedido(pedidoId);
         for (PedidoProduto item : produtos) {
-            estoqueService.baixarIngredientesDoProduto(item.getProdutoId(), item.getQuantidade());
+            custoTotal += estoqueService.baixarIngredientesDoProduto(item.getProdutoId(), item.getQuantidade(), pedidoId);
         }
 
+        List<PedidoAdicional> adicionais = listarAdicionaisEntidadeDoPedido(pedidoId);
         for (PedidoAdicional item : adicionais) {
-            estoqueService.baixarIngredientesDoAdicional(item.getAdicionalId(), item.getQuantidade());
+            custoTotal += estoqueService.baixarIngredientesDoAdicional(item.getAdicionalId(), item.getQuantidade(), pedidoId);
+        }
+
+        return custoTotal;
+    }
+
+    public void excluir(Long id) {
+        cancelarPedido(id);
+    }
+
+    private void filtrarSelecionados(PedidoDTO dto) {
+        if (dto.getProdutos() != null) {
+            dto.setProdutos(dto.getProdutos().stream()
+                    .filter(p -> p.getProdutoId() != null && Boolean.TRUE.equals(p.getSelecionado()))
+                    .toList());
+        }
+
+        if (dto.getAdicionais() != null) {
+            dto.setAdicionais(dto.getAdicionais().stream()
+                    .filter(a -> a.getAdicionalId() != null && Boolean.TRUE.equals(a.getSelecionado()))
+                    .toList());
         }
     }
 
     private void salvarProdutosDoPedido(Long pedidoId, List<PedidoProdutoDTO> produtos) {
-
         if (produtos == null) {
             return;
         }
 
         for (PedidoProdutoDTO itemDTO : produtos) {
-
-            if (!Boolean.TRUE.equals(itemDTO.getSelecionado())) {
-                continue;
-            }
-
-            if (itemDTO.getProdutoId() == null) {
+            if (!Boolean.TRUE.equals(itemDTO.getSelecionado()) || itemDTO.getProdutoId() == null) {
                 continue;
             }
 
             PedidoProduto item = new PedidoProduto();
-
             item.setPedidoId(pedidoId);
             item.setProdutoId(itemDTO.getProdutoId());
             item.setQuantidade(itemDTO.getQuantidade());
@@ -201,23 +249,16 @@ public class PedidoService {
     }
 
     private void salvarAdicionaisDoPedido(Long pedidoId, List<PedidoAdicionalDTO> adicionais) {
-
         if (adicionais == null) {
             return;
         }
 
         for (PedidoAdicionalDTO itemDTO : adicionais) {
-
-            if (!Boolean.TRUE.equals(itemDTO.getSelecionado())) {
-                continue;
-            }
-
-            if (itemDTO.getAdicionalId() == null) {
+            if (!Boolean.TRUE.equals(itemDTO.getSelecionado()) || itemDTO.getAdicionalId() == null) {
                 continue;
             }
 
             PedidoAdicional item = new PedidoAdicional();
-
             item.setPedidoId(pedidoId);
             item.setAdicionalId(itemDTO.getAdicionalId());
             item.setQuantidade(itemDTO.getQuantidade());
@@ -259,6 +300,8 @@ public class PedidoService {
                 pedido.getValorEntrega(),
                 pedido.getValorTotal(),
                 pedido.getValorPago(),
+                pedido.getCustoTotal(),
+                pedido.getLucroBruto(),
                 listarProdutosDoPedido(pedido.getId()),
                 listarAdicionaisDoPedido(pedido.getId())
         );
@@ -294,103 +337,5 @@ public class PedidoService {
 
     private Integer n(Integer valor) {
         return valor == null ? 0 : valor;
-    }
-
-    public PedidoDTO atualizar(Long id, PedidoDTO dto) {
-
-        Pedido pedido = buscarEntidadePorId(id);
-
-        List<PedidoProduto> produtosAntigos = listarProdutosEntidadeDoPedido(id);
-
-        for (PedidoProduto item : produtosAntigos) {
-            estoqueService.registrarEntradaPorProduto(
-                    item.getProdutoId(),
-                    item.getQuantidade()
-            );
-        }
-
-        List<PedidoAdicional> adicionaisAntigos = listarAdicionaisEntidadeDoPedido(id);
-
-        for (PedidoAdicional item : adicionaisAntigos) {
-            estoqueService.registrarEntradaPorAdicional(
-                    item.getAdicionalId(),
-                    item.getQuantidade()
-            );
-        }
-
-        pedido.setNomeCliente(dto.getNomeCliente());
-        pedido.setTipoEntrega(dto.getTipoEntrega());
-        pedido.setValorEntrega(dto.getValorEntrega());
-
-        if (dto.getProdutos() != null) {
-
-            dto.setProdutos(
-                    dto.getProdutos()
-                            .stream()
-                            .filter(p ->
-                                    p.getProdutoId() != null
-                                            && Boolean.TRUE.equals(p.getSelecionado())
-                            )
-                            .toList()
-            );
-        }
-
-        if (dto.getAdicionais() != null) {
-
-            dto.setAdicionais(
-                    dto.getAdicionais()
-                            .stream()
-                            .filter(a ->
-                                    a.getAdicionalId() != null
-                                            && Boolean.TRUE.equals(a.getSelecionado())
-                            )
-                            .toList()
-            );
-        }
-
-        double valorTotal = calcularValorTotal(dto);
-
-        pedido.setValorTotal(valorTotal);
-
-        if (dto.getValorPago() == null) {
-            pedido.setValorPago(valorTotal);
-        } else {
-            pedido.setValorPago(dto.getValorPago());
-        }
-
-        entityManager.merge(pedido);
-
-        entityManager.createQuery(
-                        "delete from PedidoProduto pp where pp.pedidoId = :pedidoId"
-                )
-                .setParameter("pedidoId", id)
-                .executeUpdate();
-
-        entityManager.createQuery(
-                        "delete from PedidoAdicional pa where pa.pedidoId = :pedidoId"
-                )
-                .setParameter("pedidoId", id)
-                .executeUpdate();
-
-        salvarProdutosDoPedido(id, dto.getProdutos());
-
-        salvarAdicionaisDoPedido(id, dto.getAdicionais());
-
-        baixarEstoqueDoPedido(id);
-
-        return buscarPorId(id);
-    }
-
-    public void excluir(Long id) {
-        entityManager.createQuery("delete from PedidoProduto pp where pp.pedidoId = :pedidoId")
-                .setParameter("pedidoId", id)
-                .executeUpdate();
-
-        entityManager.createQuery("delete from PedidoAdicional pa where pa.pedidoId = :pedidoId")
-                .setParameter("pedidoId", id)
-                .executeUpdate();
-
-        Pedido pedido = buscarEntidadePorId(id);
-        entityManager.remove(entityManager.contains(pedido) ? pedido : entityManager.merge(pedido));
     }
 }

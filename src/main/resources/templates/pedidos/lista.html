@@ -1,48 +1,53 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <title>Pedidos</title>
+    <meta charset="UTF-8"/>
+    <title>Pedidos</title>
 </head>
 <body>
 
 <h1>Lista de Pedidos</h1>
 
-<a th:href="@{/pedidos/novo}">Novo Pedido</a>
+<p>
+    <a th:href="@{/pedidos/novo}">Novo Pedido</a>
+    |
+    <a th:href="@{/relatorios/financeiro}">Relatório financeiro</a>
+</p>
 
 <table border="1">
-  <thead>
-  <tr>
-    <th>ID</th>
-    <th>Cliente</th>
-    <th>Total</th>
-    <th>Valor Pago</th>
-    <th>Entrega/Retirada</th>
-    <th>Ações</th>
-  </tr>
-  </thead>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Cliente</th>
+        <th>Total</th>
+        <th>Custo</th>
+        <th>Lucro bruto</th>
+        <th>Valor Pago</th>
+        <th>Entrega/Retirada</th>
+        <th>Ações</th>
+    </tr>
+    </thead>
 
-  <tbody>
-  <tr th:each="p : ${pedidos}">
-    <td th:text="${p.id}"></td>
-    <td th:text="${p.nomeCliente}"></td>
-    <td th:text="${p.valorTotal}"></td>
-    <td th:text="${p.valorPago}"></td>
-
-    <td th:text="${p.tipoEntrega == T(com.bitokas.manager.model.pedidos.TipoEntrega).ENTREGA} ? 'Entrega' : 'Retirada'"></td>
-
-    <td>
-      <a th:href="@{'/pedidos/editar/' + ${p.id}}">Editar</a>
-
-      <form th:action="@{'/pedidos/' + ${p.id} + '/excluir'}"
-            method="post"
-            style="display:inline;">
-
-        <button type="submit">Excluir</button>
-
-      </form>
-    </td>
-  </tr>
-  </tbody>
+    <tbody>
+    <tr th:each="p : ${pedidos}">
+        <td th:text="${p.id}"></td>
+        <td th:text="${p.nomeCliente}"></td>
+        <td th:text="${p.valorTotal}"></td>
+        <td th:text="${p.custoTotal}"></td>
+        <td th:text="${p.lucroBruto}"></td>
+        <td th:text="${p.valorPago}"></td>
+        <td th:text="${p.tipoEntrega == T(com.bitokas.manager.model.pedidos.TipoEntrega).ENTREGA} ? 'Entrega' : 'Retirada'"></td>
+        <td>
+            <a th:href="@{'/pedidos/' + ${p.id}}">Detalhes</a>
+            |
+            <a th:href="@{'/pedidos/editar/' + ${p.id}}">Editar</a>
+            <form th:action="@{'/pedidos/' + ${p.id} + '/cancelar'}"
+                  method="post" style="display:inline;">
+                <button type="submit">Cancelar</button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
 </table>
 
 </body>

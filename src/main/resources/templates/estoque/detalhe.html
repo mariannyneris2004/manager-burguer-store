@@ -1,48 +1,69 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta charset="UTF-8"/>
     <title>Detalhe do Estoque</title>
 </head>
 <body>
 
 <h1>Detalhe do Estoque</h1>
 
-<p>
-    <a th:href="@{/estoque}">Voltar para o estoque</a>
-</p>
+<p><a th:href="@{/estoque}">Voltar para o estoque</a></p>
 
 <h3 th:text="${ingrediente.nome}"></h3>
 
 <p><strong>ID do ingrediente:</strong> <span th:text="${ingrediente.id}"></span></p>
-<p><strong>Medida unitária:</strong> <span th:text="${ingrediente.medidaUnitaria}"></span></p>
+<p><strong>Unidade consumo:</strong> <span th:text="${ingrediente.unidadeConsumo}"></span></p>
+<p><strong>Unidade compra:</strong> <span th:text="${ingrediente.unidadeCompra}"></span></p>
+<p><strong>Qtd por compra:</strong> <span th:text="${ingrediente.quantidadePorUnidadeCompra}"></span></p>
+
 <p><strong>Quantidade em estoque:</strong> <span th:text="${itemEstoque.quantidade}"></span></p>
+<p><strong>Custo médio:</strong> <span th:text="${itemEstoque.custoMedioAtual}"></span></p>
+<p><strong>Valor total em estoque:</strong> <span th:text="${itemEstoque.valorTotalEstoque}"></span></p>
 
 <hr/>
 
-<h3>Movimentar este ingrediente</h3>
-
+<h3>Ajuste manual</h3>
 <form method="post">
     <input type="hidden" name="ingredienteId" th:value="${ingrediente.id}"/>
 
-    <label>Quantidade:</label>
-    <input type="number" name="quantidade" step="0.001" min="0.001" required/>
-
-    <button type="submit" th:formaction="@{/estoque/entrada}">Entrada</button>
-    <button type="submit" th:formaction="@{/estoque/saida}">Saída</button>
-</form>
-
-<p>
-    Para ajuste manual, use valor positivo para adicionar e valor negativo para baixar.
-</p>
-
-<form method="post">
-    <input type="hidden" name="ingredienteId" th:value="${ingrediente.id}"/>
-
-    <label>Ajuste:</label>
+    <label>Quantidade (negativo para baixar):</label>
     <input type="number" name="quantidade" step="0.001" required/>
 
     <button type="submit" th:formaction="@{/estoque/ajustar}">Aplicar ajuste</button>
 </form>
+
+<hr/>
+
+<h3>Movimentações</h3>
+
+<table border="1">
+    <thead>
+    <tr>
+        <th>Data/Hora</th>
+        <th>Tipo</th>
+        <th>Qtd</th>
+        <th>Custo unit.</th>
+        <th>Valor total</th>
+        <th>Origem</th>
+        <th>Observação</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="mov : ${movimentos}">
+        <td th:text="${#temporals.format(mov.dataHora, 'dd/MM/yyyy HH:mm')}"></td>
+        <td th:text="${mov.tipo}"></td>
+        <td th:text="${mov.quantidade}"></td>
+        <td th:text="${mov.custoUnitario}"></td>
+        <td th:text="${mov.valorTotal}"></td>
+        <td th:text="${mov.origemTipo + ' #' + mov.origemId}"></td>
+        <td th:text="${mov.observacao}"></td>
+    </tr>
+    <tr th:if="${movimentos == null or #lists.isEmpty(movimentos)}">
+        <td colspan="7">Nenhuma movimentação registrada.</td>
+    </tr>
+    </tbody>
+</table>
 
 </body>
 </html>

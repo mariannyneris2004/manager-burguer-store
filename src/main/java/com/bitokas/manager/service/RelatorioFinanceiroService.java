@@ -3,17 +3,18 @@ package com.bitokas.manager.service;
 import com.bitokas.manager.dto.RelatorioFinanceiroDTO;
 import com.bitokas.manager.model.gastos.CompraIngrediente;
 import com.bitokas.manager.model.gastos.DespesaGeral;
+import com.bitokas.manager.model.gastos.MovimentoEstoque;
+import com.bitokas.manager.model.gastos.TipoMovimentoEstoque;
 import com.bitokas.manager.model.pedidos.Pedido;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Service
 @Transactional
@@ -61,20 +62,36 @@ public class RelatorioFinanceiroService {
                 .sum();
     }
 
-    public Double calcularLucro(LocalDateTime inicio, LocalDateTime fim) {
-        double vendas = calcularTotalVendas(inicio, fim);
-        double compras = calcularTotalCompras(inicio, fim);
-        double despesas = calcularTotalDespesas(inicio, fim);
-        return vendas - compras - despesas;
+    public Double calcularCMV(LocalDateTime inicio, LocalDateTime fim) {
+        return entityManager.createQuery(
+                        "select m from MovimentoEstoque m where m.tipo = :tipo and m.dataHora between :inicio and :fim",
+                        MovimentoEstoque.class)
+                .setParameter("tipo", TipoMovimentoEstoque.SAIDA_PEDIDO)
+                .setParameter("inicio", inicio)
+                .setParameter("fim", fim)
+                .getResultList()
+                .stream()
+                .mapToDouble(m -> n(m.getValorTotal()))
+                .sum();
+    }
+
+    public Double calcularLucroBruto(LocalDateTime inicio, LocalDateTime fim) {
+        return calcularTotalVendas(inicio, fim) - calcularCMV(inicio, fim);
+    }
+
+    public Double calcularLucroLiquido(LocalDateTime inicio, LocalDateTime fim) {
+        return calcularLucroBruto(inicio, fim) - calcularTotalDespesas(inicio, fim);
     }
 
     public RelatorioFinanceiroDTO gerarResumoFinanceiro(LocalDateTime inicio, LocalDateTime fim) {
         double vendas = calcularTotalVendas(inicio, fim);
         double compras = calcularTotalCompras(inicio, fim);
+        double cmv = calcularCMV(inicio, fim);
         double despesas = calcularTotalDespesas(inicio, fim);
-        double lucro = vendas - compras - despesas;
+        double lucroBruto = vendas - cmv;
+        double lucroLiquido = lucroBruto - despesas;
 
-        return new RelatorioFinanceiroDTO(inicio, fim, vendas, compras, despesas, lucro);
+        return new RelatorioFinanceiroDTO(inicio, fim, vendas, compras, cmv, despesas, lucroBruto, lucroLiquido);
     }
 
     public List<Pedido> listarPedidosPeriodo(LocalDateTime inicio, LocalDateTime fim) {
@@ -88,10 +105,6 @@ public class RelatorioFinanceiroService {
 
     private Date toDate(LocalDateTime localDateTime) {
         return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
-    }
-
-    private Timestamp toTimestamp(LocalDateTime localDateTime) {
-        return Timestamp.valueOf(localDateTime);
     }
 
     private double n(Double valor) {

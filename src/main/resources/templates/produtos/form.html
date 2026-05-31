@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <title>Produto</title>
+    <meta charset="UTF-8"/>
+    <title>Produto</title>
 </head>
 <body>
 
@@ -11,7 +12,6 @@
 
   <input type="hidden" th:field="*{id}"/>
 
-  <!-- Nome -->
   <div>
     <label>Nome:</label>
     <input type="text" th:field="*{nome}" required/>
@@ -19,18 +19,13 @@
 
   <br/>
 
-  <!-- Valor Venda -->
   <div>
     <label>Valor de Venda:</label>
-    <input type="number"
-           step="0.01"
-           th:field="*{valorVenda}"
-           required/>
+    <input type="number" step="0.01" th:field="*{valorVenda}" required/>
   </div>
 
   <br/>
 
-  <!-- Categoria -->
   <div>
     <label>Categoria:</label>
 
@@ -45,72 +40,56 @@
 
   <br/><br/>
 
-  <!-- INGREDIENTES -->
   <h3>Ingredientes</h3>
 
   <div th:each="ing, i : ${ingredientesDisponiveis}">
-
-    <input type="hidden"
-           th:field="*{ingredientes[__${i.index}__].id}" />
-
-    <input type="hidden"
-           th:field="*{ingredientes[__${i.index}__].produtoId}" />
-
-    <input type="hidden"
-           th:field="*{ingredientes[__${i.index}__].ingredienteId}" />
+    <input type="hidden" th:field="*{ingredientes[__${i.index}__].id}" />
+    <input type="hidden" th:field="*{ingredientes[__${i.index}__].produtoId}" />
+    <input type="hidden" th:field="*{ingredientes[__${i.index}__].ingredienteId}" />
 
     <label>
-
-      <input type="checkbox"
-             th:field="*{ingredientes[__${i.index}__].selecionado}" />
-
+      <input type="checkbox" th:field="*{ingredientes[__${i.index}__].selecionado}" />
       <span th:text="${ing.nome}"></span>
-
     </label>
 
     <input type="number"
            step="0.01"
            min="0"
            th:field="*{ingredientes[__${i.index}__].quantidade}" />
-
+    <small th:text="${ing.unidadeConsumo}"></small>
     <br/>
-
   </div>
+
   <br/><br/>
 
   <h3>Adicionais Permitidos</h3>
 
   <div th:each="adc, i : ${adicionaisDisponiveis}">
-
-    <input type="hidden"
-           th:field="*{adicionaisPermitidos[__${i.index}__].id}" />
-
-    <input type="hidden"
-           th:field="*{adicionaisPermitidos[__${i.index}__].produtoId}" />
-
-    <input type="hidden"
-           th:field="*{adicionaisPermitidos[__${i.index}__].adicionalId}" />
+    <input type="hidden" th:field="*{adicionaisPermitidos[__${i.index}__].id}" />
+    <input type="hidden" th:field="*{adicionaisPermitidos[__${i.index}__].produtoId}" />
+    <input type="hidden" th:field="*{adicionaisPermitidos[__${i.index}__].adicionalId}" />
 
     <label>
-
-      <input type="checkbox"
-             th:field="*{adicionaisPermitidos[__${i.index}__].selecionado}" />
-
+      <input type="checkbox" th:field="*{adicionaisPermitidos[__${i.index}__].selecionado}" />
       <span th:text="${adc.nome}"></span>
-
     </label>
 
     <br/>
-
   </div>
 
   <br/><br/>
 
+  <div th:if="${produto.custoUnitario != null}">
+      <strong>Custo atual:</strong> <span th:text="${produto.custoUnitario}"></span><br/>
+      <strong>Lucro atual:</strong> <span th:text="${produto.lucroUnitario}"></span><br/>
+      <strong>Margem:</strong> <span th:text="${#numbers.formatDecimal(produto.margemPercentual, 1, 2)}"></span>%
+  </div>
+
+  <br/>
+
   <button type="submit">Salvar</button>
 
-  <a th:href="@{/produtos}">
-    Cancelar
-  </a>
+  <a th:href="@{/produtos}">Cancelar</a>
 
 </form>
 

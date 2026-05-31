@@ -14,14 +14,11 @@
 
     <h2 class="mb-4">Relatório Financeiro</h2>
 
-    <!-- MENSAGEM DE ERRO -->
     <div th:if="${erro}" class="alert alert-danger">
         <span th:text="${erro}"></span>
     </div>
 
-    <!-- FORMULÁRIO -->
     <form method="post" th:action="@{/relatorios/financeiro}" class="card p-3 mb-4 shadow-sm">
-
         <div class="row g-3">
             <div class="col-md-6">
                 <label class="form-label">Data Início:</label>
@@ -43,13 +40,9 @@
         </div>
     </form>
 
-    <!-- RESULTADOS (só mostra se existir relatório gerado) -->
     <div th:if="${relatorio.totalVendas != null}">
-
-        <!-- CARDS RESUMO -->
         <div class="row text-center mb-4">
-
-            <div class="col-md-3 mb-3">
+            <div class="col-md-2 mb-3">
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <h6>Vendas</h6>
@@ -58,7 +51,7 @@
                 </div>
             </div>
 
-            <div class="col-md-3 mb-3">
+            <div class="col-md-2 mb-3">
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <h6>Compras</h6>
@@ -67,7 +60,16 @@
                 </div>
             </div>
 
-            <div class="col-md-3 mb-3">
+            <div class="col-md-2 mb-3">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h6>CMV</h6>
+                        <h4 class="text-danger" th:text="${#numbers.formatDecimal(relatorio.cmv, 2, 2)}"></h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-2 mb-3">
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <h6>Despesas</h6>
@@ -76,19 +78,27 @@
                 </div>
             </div>
 
-            <div class="col-md-3 mb-3">
+            <div class="col-md-2 mb-3">
                 <div class="card shadow-sm">
                     <div class="card-body">
-                        <h6>Lucro</h6>
-                        <h4 th:classappend="${relatorio.lucro >= 0} ? 'text-success' : 'text-danger'"
-                            th:text="${#numbers.formatDecimal(relatorio.lucro, 2, 2)}"></h4>
+                        <h6>Lucro Bruto</h6>
+                        <h4 th:classappend="${relatorio.lucroBruto >= 0} ? 'text-success' : 'text-danger'"
+                            th:text="${#numbers.formatDecimal(relatorio.lucroBruto, 2, 2)}"></h4>
                     </div>
                 </div>
             </div>
 
+            <div class="col-md-2 mb-3">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h6>Lucro Líquido</h6>
+                        <h4 th:classappend="${relatorio.lucroLiquido >= 0} ? 'text-success' : 'text-danger'"
+                            th:text="${#numbers.formatDecimal(relatorio.lucroLiquido, 2, 2)}"></h4>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- TABELA DE PEDIDOS -->
         <h4 class="mt-4">Pedidos no período</h4>
         <div class="card shadow-sm">
             <div class="card-body p-0">
@@ -98,6 +108,8 @@
                         <th>ID</th>
                         <th>Data/Hora</th>
                         <th>Valor Total</th>
+                        <th>Custo</th>
+                        <th>Lucro</th>
                         <th>Valor Pago</th>
                     </tr>
                     </thead>
@@ -106,20 +118,20 @@
                         <td th:text="${p.id}"></td>
                         <td th:text="${#temporals.format(p.dataHora, 'dd/MM/yyyy HH:mm')}"></td>
                         <td th:text="${#numbers.formatDecimal(p.valorTotal, 2, 2)}"></td>
+                        <td th:text="${#numbers.formatDecimal(p.custoTotal, 2, 2)}"></td>
+                        <td th:text="${#numbers.formatDecimal(p.lucroBruto, 2, 2)}"></td>
                         <td th:text="${p.valorPago != null ? #numbers.formatDecimal(p.valorPago, 2, 2) : '-'}"></td>
                     </tr>
 
                     <tr th:if="${#lists.isEmpty(pedidos)}">
-                        <td colspan="4" class="text-center text-muted py-3">
+                        <td colspan="6" class="text-center text-muted py-3">
                             Nenhum pedido encontrado no período.
                         </td>
                     </tr>
-
                     </tbody>
                 </table>
             </div>
         </div>
-
     </div>
 
 </div>

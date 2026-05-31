@@ -5,7 +5,10 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "estoque")
+@Table(
+        name = "estoque",
+        uniqueConstraints = @UniqueConstraint(columnNames = "ingrediente_id")
+)
 @Getter
 @Setter
 public class Estoque {
@@ -14,10 +17,12 @@ public class Estoque {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "ingrediente_id")
+    @Column(name = "ingrediente_id", nullable = false)
     private Long ingredienteId;
 
-    @Column
+    @Column(nullable = false)
     private Double quantidade;
 
+    @Column(name = "custo_medio_atual", nullable = false)
+    private Double custoMedioAtual;
 }

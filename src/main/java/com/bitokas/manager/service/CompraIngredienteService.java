@@ -2,6 +2,7 @@ package com.bitokas.manager.service;
 
 import com.bitokas.manager.dto.CompraIngredienteDTO;
 import com.bitokas.manager.dto.CompraItemDTO;
+import com.bitokas.manager.dto.IngredienteDTO;
 import com.bitokas.manager.model.gastos.CompraIngrediente;
 import com.bitokas.manager.model.gastos.CompraItem;
 import jakarta.persistence.EntityManager;
@@ -22,64 +23,67 @@ public class CompraIngredienteService {
     private EntityManager entityManager;
 
     private final EstoqueService estoqueService;
+    private final IngredienteService ingredienteService;
 
     public CompraIngredienteDTO registrarCompra(CompraIngredienteDTO dto) {
         if (dto.getId() == null) {
             return criar(dto);
-        } else {
-            return atualizar(dto);
         }
+        throw new UnsupportedOperationException("Edição de compra foi removida para evitar inconsistências no custo médio. Exclua e recadastre a compra se necessário.");
     }
 
     private CompraIngredienteDTO criar(CompraIngredienteDTO dto) {
 
         CompraIngrediente compra = new CompraIngrediente();
-        compra.setDataCompra(dto.getDataCompra() == null ? new Date() : dto.getDataCompra());
 
-        double totalCalculado = calcularTotal(dto.getItens());
-        compra.setValorTotal(dto.getValorTotal() == null ? totalCalculado : dto.getValorTotal());
+        compra.setDataCompra(
+                dto.getDataCompra() == null ? new Date() : dto.getDataCompra()
+        );
+
+        compra.setValorTotal(calcularTotal(dto.getItens()));
 
         entityManager.persist(compra);
         entityManager.flush();
 
         salvarItens(compra.getId(), dto.getItens());
-        if (dto.getItens() != null) {
-            for (CompraItemDTO item : dto.getItens()) {
-                estoqueService.registrarEntrada(item.getIngredienteId(), item.getQuantidade());
-            }
-        }
+        aplicarEntradaNoEstoque(compra.getId(), dto.getItens());
 
         return buscarPorId(compra.getId());
     }
 
-    private CompraIngredienteDTO atualizar(CompraIngredienteDTO dto) {
-
-        CompraIngrediente compra = buscarEntidadePorId(dto.getId());
-        compra.setDataCompra(dto.getDataCompra() != null ? dto.getDataCompra() : compra.getDataCompra());
-
-        List<CompraItemDTO> itensAntigos = listarItensDaCompra(dto.getId());
-        for (CompraItemDTO item : itensAntigos) {
-            estoqueService.registrarSaida(item.getIngredienteId(), item.getQuantidade());
+    private void aplicarEntradaNoEstoque(Long compraId, List<CompraItemDTO> itens) {
+        if (itens == null) {
+            return;
         }
 
-        entityManager.createQuery("delete from CompraItem ci where ci.compraId = :id")
-                .setParameter("id", dto.getId())
-                .executeUpdate();
+        for (CompraItemDTO item : itens) {
+            IngredienteDTO ingrediente = ingredienteService.buscarPorId(item.getIngredienteId());
 
-        salvarItens(dto.getId(), dto.getItens());
-
-        if (dto.getItens() != null) {
-            for (CompraItemDTO item : dto.getItens()) {
-                estoqueService.registrarEntrada(item.getIngredienteId(), item.getQuantidade());
+            double quantidadeComprada = n(item.getQuantidade());
+            double unidadesPorEmbalagem = n(item.getUnidadesPorEmbalagem());
+            if (unidadesPorEmbalagem <= 0) {
+                unidadesPorEmbalagem = n(ingrediente.getQuantidadePorUnidadeCompra());
             }
+            if (unidadesPorEmbalagem <= 0) {
+                unidadesPorEmbalagem = 1d;
+            }
+
+            double quantidadeEstoque = quantidadeComprada * unidadesPorEmbalagem;
+            double custoUnitarioEstoque = quantidadeEstoque == 0 ? 0d : (quantidadeComprada * n(item.getValorUnitario())) / quantidadeEstoque;
+            double valorTotalItem = quantidadeComprada * n(item.getValorUnitario());
+
+            estoqueService.registrarEntradaCompra(
+                    item.getIngredienteId(),
+                    quantidadeEstoque,
+                    custoUnitarioEstoque,
+                    compraId
+            );
+
+            item.setUnidadesPorEmbalagem(unidadesPorEmbalagem);
+            item.setQuantidadeEstoque(quantidadeEstoque);
+            item.setCustoUnitarioEstoque(custoUnitarioEstoque);
+            item.setValorTotalItem(valorTotalItem);
         }
-
-        double total = calcularTotal(dto.getItens());
-        compra.setValorTotal(total);
-
-        entityManager.merge(compra);
-
-        return buscarPorId(dto.getId());
     }
 
     public CompraIngredienteDTO buscarPorId(Long id) {
@@ -88,54 +92,51 @@ public class CompraIngredienteService {
     }
 
     public List<CompraIngredienteDTO> listarTodas() {
-        return entityManager.createQuery("select c from CompraIngrediente c order by c.dataCompra desc", CompraIngrediente.class)
+        return entityManager.createQuery(
+                        "select c from CompraIngrediente c order by c.dataCompra desc",
+                        CompraIngrediente.class)
                 .getResultList()
                 .stream()
                 .map(this::toDTOCompleto)
                 .toList();
     }
 
-    public CompraIngredienteDTO recalcularValorTotal(Long compraId) {
-        CompraIngrediente compra = buscarEntidadePorId(compraId);
-        List<CompraItemDTO> itens = listarItensDaCompra(compraId);
-
-        double total = calcularTotal(itens);
-        compra.setValorTotal(total);
-        entityManager.merge(compra);
-
-        return buscarPorId(compraId);
-    }
-
-    public void excluir(Long id) {
-        List<CompraItem> itens = entityManager.createQuery(
-                        "select ci from CompraItem ci where ci.compraId = :compraId",
-                        CompraItem.class)
-                .setParameter("compraId", id)
-                .getResultList();
-
-        for (CompraItem item : itens) {
-            estoqueService.registrarSaida(item.getIngredienteId(), item.getQuantidade());
-        }
-
-        entityManager.createQuery("delete from CompraItem ci where ci.compraId = :compraId")
-                .setParameter("compraId", id)
-                .executeUpdate();
-
-        CompraIngrediente compra = buscarEntidadePorId(id);
-        entityManager.remove(entityManager.contains(compra) ? compra : entityManager.merge(compra));
-    }
-
     private void salvarItens(Long compraId, List<CompraItemDTO> itens) {
-        if (itens == null) {
-            return;
+        if (itens == null || itens.isEmpty()) {
+            throw new IllegalArgumentException("A compra precisa ter ao menos um item.");
         }
 
         for (CompraItemDTO itemDTO : itens) {
+            if (itemDTO.getIngredienteId() == null) {
+                continue;
+            }
+
+            IngredienteDTO ingrediente = ingredienteService.buscarPorId(itemDTO.getIngredienteId());
+
+            double quantidadeComprada = n(itemDTO.getQuantidade());
+            double unidadesPorEmbalagem = n(itemDTO.getUnidadesPorEmbalagem());
+            if (unidadesPorEmbalagem <= 0) {
+                unidadesPorEmbalagem = n(ingrediente.getQuantidadePorUnidadeCompra());
+            }
+            if (unidadesPorEmbalagem <= 0) {
+                unidadesPorEmbalagem = 1d;
+            }
+
+            double quantidadeEstoque = quantidadeComprada * unidadesPorEmbalagem;
+            double valorUnitario = n(itemDTO.getValorUnitario());
+            double custoUnitarioEstoque = quantidadeEstoque == 0 ? 0d : (quantidadeComprada * valorUnitario) / quantidadeEstoque;
+            double valorTotalItem = quantidadeComprada * valorUnitario;
+
             CompraItem item = new CompraItem();
             item.setCompraId(compraId);
             item.setIngredienteId(itemDTO.getIngredienteId());
-            item.setQuantidade(itemDTO.getQuantidade());
-            item.setValorUnitario(itemDTO.getValorUnitario());
+            item.setQuantidade(quantidadeComprada);
+            item.setUnidadesPorEmbalagem(unidadesPorEmbalagem);
+            item.setQuantidadeEstoque(quantidadeEstoque);
+            item.setValorUnitario(valorUnitario);
+            item.setCustoUnitarioEstoque(custoUnitarioEstoque);
+            item.setValorTotalItem(valorTotalItem);
+
             entityManager.persist(item);
         }
     }
@@ -174,7 +175,11 @@ public class CompraIngredienteService {
                 item.getCompraId(),
                 item.getIngredienteId(),
                 item.getQuantidade(),
-                item.getValorUnitario()
+                item.getUnidadesPorEmbalagem(),
+                item.getQuantidadeEstoque(),
+                item.getValorUnitario(),
+                item.getCustoUnitarioEstoque(),
+                item.getValorTotalItem()
         );
     }
 

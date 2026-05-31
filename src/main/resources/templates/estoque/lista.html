@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta charset="UTF-8"/>
     <title>Estoque</title>
 </head>
 <body>
@@ -9,126 +10,59 @@
 
 <p>
     <a th:href="@{/}">Início</a> |
-    <a th:href="@{/estoque}">Atualizar</a>
+    <a th:href="@{/compras}">Compras</a> |
+    <a th:href="@{/ingredientes}">Ingredientes</a>
 </p>
 
-<h3>Movimentar estoque</h3>
+<h3>Ajuste manual</h3>
 
 <form method="post">
-
     <label>Ingrediente:</label>
     <select name="ingredienteId" required>
         <option value="">Selecione...</option>
-
-        <option th:each="ing : ${ingredientes}"
-                th:value="${ing.id}"
-                th:text="${ing.nome}">
-        </option>
+        <option th:each="ing : ${ingredientes}" th:value="${ing.id}" th:text="${ing.nome}"></option>
     </select>
 
-    <label>Quantidade:</label>
-    <input type="number"
-           name="quantidade"
-           step="0.001"
-           min="0.001"
-           required/>
+    <label>Quantidade (use negativo para baixar):</label>
+    <input type="number" name="quantidade" step="0.001" required/>
 
-    <button type="submit"
-            th:formaction="@{/estoque/entrada}">
-        Entrada
-    </button>
-
-    <button type="submit"
-            th:formaction="@{/estoque/saida}">
-        Saída
-    </button>
-
-</form>
-
-<br/>
-
-<p>
-    Para ajuste manual, use valor positivo para adicionar
-    e valor negativo para baixar.
-</p>
-
-<form method="post">
-
-    <label>Ingrediente:</label>
-    <select name="ingredienteId" required>
-        <option value="">Selecione...</option>
-
-        <option th:each="ing : ${ingredientes}"
-                th:value="${ing.id}"
-                th:text="${ing.nome}">
-        </option>
-    </select>
-
-    <label>Ajuste:</label>
-
-    <input type="number"
-           name="quantidade"
-           step="0.001"
-           required/>
-
-    <button type="submit"
-            th:formaction="@{/estoque/ajustar}">
-        Aplicar ajuste
-    </button>
-
+    <button type="submit" th:formaction="@{/estoque/ajustar}">Aplicar ajuste</button>
 </form>
 
 <br/>
 
 <table border="1">
-
     <thead>
     <tr>
         <th>ID</th>
         <th>Ingrediente</th>
         <th>Quantidade</th>
+        <th>Custo médio</th>
+        <th>Valor total</th>
         <th>Ações</th>
     </tr>
     </thead>
 
     <tbody>
-
     <tr th:each="item : ${estoque}">
-
         <td th:text="${item.id}"></td>
-
         <td>
             <span th:each="ing : ${ingredientes}"
                   th:if="${ing.id == item.ingredienteId}"
-                  th:text="${ing.nome}">
-            </span>
+                  th:text="${ing.nome}"></span>
         </td>
-
         <td th:text="${item.quantidade}"></td>
-
+        <td th:text="${item.custoMedioAtual}"></td>
+        <td th:text="${item.valorTotalEstoque}"></td>
         <td>
-
-            <a th:if="${item.id != null}"
-               th:href="@{'/estoque/' + ${item.ingredienteId}}">
-                Detalhes
-            </a>
-
-            <span th:if="${item.id == null}">
-                -
-            </span>
-
+            <a th:href="@{'/estoque/' + ${item.ingredienteId}}">Detalhes</a>
         </td>
-
     </tr>
 
     <tr th:if="${estoque == null or #lists.isEmpty(estoque)}">
-        <td colspan="4">
-            Nenhum item de estoque cadastrado.
-        </td>
+        <td colspan="6">Nenhum item de estoque cadastrado.</td>
     </tr>
-
     </tbody>
-
 </table>
 
 </body>

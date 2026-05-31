@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta charset="UTF-8"/>
     <title>Pedido</title>
 </head>
 <body>
@@ -14,7 +15,6 @@
     <label>Cliente:</label>
     <input type="text" th:field="*{nomeCliente}" required/><br/><br/>
 
-    <!-- Tipo de Entrega -->
     <label>Tipo de Entrega:</label>
     <select th:field="*{tipoEntrega}">
         <option th:each="t : ${tiposEntrega}"
@@ -24,68 +24,59 @@
     </select>
     <br/><br/>
 
-    <!-- Valor entrega -->
     <label>Valor da Entrega:</label>
-    <input type="number" th:field="*{valorEntrega}" step="0.00"/><br/><br/>
+    <input type="number" th:field="*{valorEntrega}" step="0.01"/><br/><br/>
 
-    <!-- Produtos -->
     <h3>Produtos</h3>
     <div th:each="p, i : ${produtosDisponiveis}">
+        <input type="hidden" th:field="*{produtos[__${i.index}__].id}" />
+        <input type="hidden" th:field="*{produtos[__${i.index}__].pedidoId}" />
+        <input type="hidden" th:field="*{produtos[__${i.index}__].produtoId}" />
 
-        <input type="hidden"
-               th:field="*{produtos[__${i.index}__].id}" />
-
-        <input type="hidden"
-               th:field="*{produtos[__${i.index}__].pedidoId}" />
-
-        <input type="hidden"
-               th:field="*{produtos[__${i.index}__].produtoId}" />
-
-        <input type="checkbox"
-               th:field="*{produtos[__${i.index}__].selecionado}" />
-
+        <input type="checkbox" th:field="*{produtos[__${i.index}__].selecionado}" />
         <span th:text="${p.nome}"></span>
 
         <input type="number"
                min="0"
                th:field="*{produtos[__${i.index}__].quantidade}"
                placeholder="Qtd"/>
-
+        <small th:if="${p.custoUnitario != null}">
+            | custo atual: <span th:text="${p.custoUnitario}"></span>
+        </small>
+        <br/>
     </div>
 
     <br/>
 
-    <!-- Adicionais -->
     <h3>Adicionais</h3>
     <div th:each="a, j : ${adicionaisDisponiveis}">
+        <input type="hidden" th:field="*{adicionais[__${j.index}__].id}" />
+        <input type="hidden" th:field="*{adicionais[__${j.index}__].pedidoId}" />
+        <input type="hidden" th:field="*{adicionais[__${j.index}__].adicionalId}" />
 
-        <input type="hidden"
-               th:field="*{adicionais[__${j.index}__].id}" />
-
-        <input type="hidden"
-               th:field="*{adicionais[__${j.index}__].pedidoId}" />
-
-        <input type="hidden"
-               th:field="*{adicionais[__${j.index}__].adicionalId}" />
-
-        <input type="checkbox"
-               th:field="*{adicionais[__${j.index}__].selecionado}" />
-
+        <input type="checkbox" th:field="*{adicionais[__${j.index}__].selecionado}" />
         <span th:text="${a.nome}"></span>
 
         <input type="number"
                min="0"
                th:field="*{adicionais[__${j.index}__].quantidade}"
                placeholder="Qtd"/>
-
+        <br/>
     </div>
 
     <br/>
 
     <label>Valor Pago:</label>
-    <input type="number" th:field="*{valorPago}" step="0.00"/><br/><br/>
+    <input type="number" th:field="*{valorPago}" step="0.01"/><br/><br/>
+
+    <div th:if="${totalCalculado != null}">
+        <strong>Total calculado:</strong> <span th:text="${totalCalculado}"></span>
+    </div>
+
+    <br/>
 
     <button type="submit">Salvar</button>
+    <button type="submit" formaction="/pedidos/calcular-total">Calcular total</button>
     <a th:href="@{/pedidos}">Cancelar</a>
 
 </form>
