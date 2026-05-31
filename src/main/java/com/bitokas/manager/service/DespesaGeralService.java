@@ -18,12 +18,16 @@ public class DespesaGeralService {
     @PersistenceContext
     private EntityManager entityManager;
 
+    //TODO: Ajustar tela para incluir data final
     public DespesaGeralDTO cadastrar(DespesaGeralDTO dto) {
         DespesaGeral despesa = new DespesaGeral();
         despesa.setNome(dto.getNome());
         despesa.setValor(dto.getValor());
         despesa.setDataDespesa(dto.getDataDespesa());
         despesa.setFrequencia(dto.getFrequencia());
+        if (dto.isPossuiFinal()){
+            despesa.setDataFinal(dto.getDataFinal());
+        }
 
         entityManager.persist(despesa);
         entityManager.flush();
@@ -37,6 +41,10 @@ public class DespesaGeralService {
         despesa.setValor(dto.getValor());
         despesa.setDataDespesa(dto.getDataDespesa());
         despesa.setFrequencia(dto.getFrequencia());
+
+        if (dto.isPossuiFinal()){
+            despesa.setDataFinal(dto.getDataFinal());
+        }
 
         entityManager.merge(despesa);
         return toDTO(despesa);
@@ -99,6 +107,8 @@ public class DespesaGeralService {
                 despesa.getNome(),
                 despesa.getValor(),
                 despesa.getDataDespesa(),
+                (despesa.getDataFinal() != null),
+                despesa.getDataFinal(),
                 despesa.getFrequencia()
         );
     }

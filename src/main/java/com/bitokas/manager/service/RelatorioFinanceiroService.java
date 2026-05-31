@@ -1,16 +1,14 @@
 package com.bitokas.manager.service;
 
 import com.bitokas.manager.dto.RelatorioFinanceiroDTO;
-import com.bitokas.manager.model.gastos.CompraIngrediente;
-import com.bitokas.manager.model.gastos.DespesaGeral;
-import com.bitokas.manager.model.gastos.MovimentoEstoque;
-import com.bitokas.manager.model.gastos.TipoMovimentoEstoque;
+import com.bitokas.manager.model.gastos.*;
 import com.bitokas.manager.model.pedidos.Pedido;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import java.time.LocalDateTime;
@@ -51,15 +49,37 @@ public class RelatorioFinanceiroService {
     }
 
     public Double calcularTotalDespesas(LocalDateTime inicio, LocalDateTime fim) {
-        return entityManager.createQuery(
+        List<DespesaGeral> despesas = entityManager.createQuery(
                         "select d from DespesaGeral d where d.dataDespesa >= :inicio and d.dataDespesa <= :fim",
                         DespesaGeral.class)
                 .setParameter("inicio", inicio)
                 .setParameter("fim", fim)
-                .getResultList()
-                .stream()
-                .mapToDouble(d -> n(d.getValor()))
-                .sum();
+                .getResultList();
+        double valorTotal = 0d;
+        for (DespesaGeral despesaGeral : despesas){
+            if (!despesaGeral.getFrequencia().equals(Frequencia.UNICA)){
+                if (despesaGeral.getFrequencia().equals(Frequencia.DIARIA)){
+                    long countDays = ChronoUnit.DAYS.between(despesaGeral.getDataDespesa(),
+                            despesaGeral.getDataFinal() != null && despesaGeral.getDataFinal().isBefore(fim)
+                                    ? despesaGeral.getDataFinal() : fim);
+                    valorTotal += countDays * despesaGeral.getValor();
+                } else if (despesaGeral.getFrequencia().equals(Frequencia.SEMANAL)){
+                    long countWeeks = ChronoUnit.WEEKS.between(despesaGeral.getDataDespesa(),
+                            despesaGeral.getDataFinal() != null && despesaGeral.getDataFinal().isBefore(fim)
+                                    ? despesaGeral.getDataFinal() : fim);
+                    valorTotal += countWeeks * despesaGeral.getValor();
+                } else {
+                    long countMonths = ChronoUnit.MONTHS.between(despesaGeral.getDataDespesa(),
+                            despesaGeral.getDataFinal() != null && despesaGeral.getDataFinal().isBefore(fim)
+                                    ? despesaGeral.getDataFinal() : fim);
+                    valorTotal += countMonths * despesaGeral.getValor();
+                }
+            } else {
+                valorTotal += despesaGeral.getValor();
+            }
+        }
+
+        return valorTotal;
     }
 
     public Double calcularCMV(LocalDateTime inicio, LocalDateTime fim) {

@@ -1,6 +1,3 @@
--- Normaliza as tabelas antigas para trabalhar com entidades que usam id próprio
--- e com o fluxo: compra -> estoque -> pedido -> CMV.
-
 ALTER TABLE ingrediente
     MODIFY medida_unitaria VARCHAR(50) NULL,
     MODIFY valor DECIMAL(10,2) NULL DEFAULT 0;

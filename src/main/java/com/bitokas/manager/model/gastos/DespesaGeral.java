@@ -27,6 +27,9 @@ public class DespesaGeral {
     @Column(name = "data_despesa")
     private LocalDateTime dataDespesa;
 
+    @Column(name = "data_final")
+    private LocalDateTime dataFinal;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "frequencia")
     private Frequencia frequencia;

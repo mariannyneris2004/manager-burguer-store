@@ -23,7 +23,7 @@
     <input
             type="date"
             th:field="*{dataDespesa}"
-            th:value="${despesa.dataDespesa != null ? #dates.format(despesa.dataDespesa, 'yyyy-MM-dd') : ''}"
+            th:value="${despesa.dataDespesa != null ? #temporals.format(despesa.dataDespesa, 'dd/MM/yyyy HH:mm') : ''}"
             required
     />
     <br/><br/>
