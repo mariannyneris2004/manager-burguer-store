@@ -61,17 +61,17 @@ public class RelatorioFinanceiroService {
                 if (despesaGeral.getFrequencia().equals(Frequencia.DIARIA)){
                     long countDays = ChronoUnit.DAYS.between(despesaGeral.getDataDespesa(),
                             despesaGeral.getDataFinal() != null && despesaGeral.getDataFinal().isBefore(fim)
-                                    ? despesaGeral.getDataFinal() : fim);
+                                    ? despesaGeral.getDataFinal() : fim) + 1;
                     valorTotal += countDays * despesaGeral.getValor();
                 } else if (despesaGeral.getFrequencia().equals(Frequencia.SEMANAL)){
                     long countWeeks = ChronoUnit.WEEKS.between(despesaGeral.getDataDespesa(),
                             despesaGeral.getDataFinal() != null && despesaGeral.getDataFinal().isBefore(fim)
-                                    ? despesaGeral.getDataFinal() : fim);
+                                    ? despesaGeral.getDataFinal() : fim) + 1;
                     valorTotal += countWeeks * despesaGeral.getValor();
                 } else {
                     long countMonths = ChronoUnit.MONTHS.between(despesaGeral.getDataDespesa(),
                             despesaGeral.getDataFinal() != null && despesaGeral.getDataFinal().isBefore(fim)
-                                    ? despesaGeral.getDataFinal() : fim);
+                                    ? despesaGeral.getDataFinal() : fim) + 1;
                     valorTotal += countMonths * despesaGeral.getValor();
                 }
             } else {

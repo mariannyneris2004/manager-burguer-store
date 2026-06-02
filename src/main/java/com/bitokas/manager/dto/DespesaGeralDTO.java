@@ -16,9 +16,10 @@ public class DespesaGeralDTO {
     private Long id;
     private String nome;
     private Double valor;
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime dataDespesa;
-    private boolean isPossuiFinal;
+    private boolean possuiFinal;
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime dataFinal;
     private Frequencia frequencia;
 }

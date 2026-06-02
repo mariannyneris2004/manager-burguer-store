@@ -45,6 +45,7 @@
         <th>Valor (R$)</th>
         <th>Frequência</th>
         <th>Data</th>
+        <th>Data Final</th>
         <th>Ações</th>
     </tr>
     </thead>
@@ -56,6 +57,7 @@
         <td th:text="${d.valor}"></td>
         <td th:text="${d.frequencia}"></td>
         <td th:text="${d.dataDespesa != null ? #temporals.format(d.dataDespesa, 'dd/MM/yyyy HH:mm') : ''}"></td>
+        <td th:text="${d.dataFinal != null ? #temporals.format(d.dataFinal, 'dd/MM/yyyy HH:mm') : ' - '}"></td>
         <td>
             <a th:href="@{'/despesas/editar/' + ${d.id}}">Editar</a>
 

@@ -21,23 +21,78 @@
 
     <label>Data da despesa:</label>
     <input
-            type="date"
+            type="datetime-local"
             th:field="*{dataDespesa}"
-            th:value="${despesa.dataDespesa != null ? #temporals.format(despesa.dataDespesa, 'dd/MM/yyyy HH:mm') : ''}"
             required
     />
     <br/><br/>
 
     <label>Frequência:</label>
-    <select th:field="*{frequencia}" required>
+    <select th:field="*{frequencia}" id="frequencia" required>
         <option value="">Selecione...</option>
-        <option th:each="f : ${frequencias}" th:value="${f}" th:text="${f}"></option>
+        <option th:each="f : ${frequencias}"
+                th:value="${f}"
+                th:text="${f}">
+        </option>
     </select>
     <br/><br/>
+
+    <div id="possuiFinalContainer" style="display:none;">
+        <label>
+            <input type="checkbox" th:field="*{possuiFinal}" id="possuiFinal"/>
+            Possui data final?
+        </label>
+        <br/><br/>
+    </div>
+
+    <!-- Data final -->
+    <div id="dataFinalContainer" style="display:none;">
+        <label>Data final:</label>
+        <input type="datetime-local"
+               th:field="*{dataFinal}"
+               id="dataFinal"/>
+        <br/><br/>
+    </div>
 
     <button type="submit">Salvar</button>
     <a th:href="@{/despesas}">Cancelar</a>
 </form>
+
+<script>
+    function atualizarCampos() {
+        const frequencia = document.getElementById('frequencia').value;
+        const possuiFinalContainer = document.getElementById('possuiFinalContainer');
+        const possuiFinal = document.getElementById('possuiFinal');
+        const dataFinalContainer = document.getElementById('dataFinalContainer');
+        const dataFinal = document.getElementById('dataFinal');
+
+        if (frequencia && frequencia !== 'UNICA') {
+            possuiFinalContainer.style.display = 'block';
+        } else {
+            possuiFinalContainer.style.display = 'none';
+            dataFinalContainer.style.display = 'none';
+            possuiFinal.checked = false;
+            dataFinal.required = false;
+            dataFinal.value = '';
+        }
+
+        if (possuiFinal.checked) {
+            dataFinalContainer.style.display = 'block';
+            dataFinal.required = true;
+        } else {
+            dataFinalContainer.style.display = 'none';
+            dataFinal.required = false;
+        }
+    }
+
+    document.getElementById('frequencia')
+        .addEventListener('change', atualizarCampos);
+
+    document.getElementById('possuiFinal')
+        .addEventListener('change', atualizarCampos);
+
+    window.addEventListener('load', atualizarCampos);
+</script>
 
 </body>
 </html>
