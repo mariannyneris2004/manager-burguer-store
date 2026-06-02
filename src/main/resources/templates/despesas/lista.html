@@ -1,79 +1,86 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <title>Despesas Gerais</title>
-</head>
+<head th:replace="~{fragments/layout :: head('Despesas')}"></head>
 <body>
+<div th:replace="~{fragments/layout :: navbar('despesas')}"></div>
 
-<h1>Lista de Despesas Gerais</h1>
+<main class="container py-4">
 
-<p>
-    <a th:href="@{/}">Início</a> |
-    <a th:href="@{/despesas/novo}">Nova despesa</a> |
-    <a th:href="@{/despesas}">Todas</a>
-</p>
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <div class="page-eyebrow text-primary mb-1">Controle financeiro</div>
+            <h1 class="h3 mb-1">Despesas Gerais</h1>
+            <p class="text-muted mb-0">Filtre por frequência ou por período.</p>
+        </div>
+        <a class="btn btn-primary" th:href="@{/despesas/novo}">Nova despesa</a>
+    </div>
 
-<div>
-    <strong>Filtrar por frequência:</strong>
-    <a th:each="f : ${frequencias}"
-       th:href="@{/despesas/frequencia/{freq}(freq=${f})}"
-       th:text="${f}"
-       style="margin-right: 8px;"></a>
-</div>
+    <div class="card app-card mb-4">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                <span class="fw-semibold">Frequência:</span>
+                <a class="btn btn-sm btn-outline-primary" th:href="@{/despesas}">Todas</a>
+                <a class="btn btn-sm btn-outline-primary" th:each="f : ${frequencias}" th:href="@{/despesas/frequencia/{freq}(freq=${f})}" th:text="${f}"></a>
+            </div>
 
-<br/>
+            <form class="row g-3 align-items-end" th:action="@{/despesas/periodo}" method="get">
+                <div class="col-md-4">
+                    <label class="form-label">Início</label>
+                    <input type="datetime-local" class="form-control" name="inicio" th:value="${inicio != null ? #temporals.format(inicio, 'yyyy-MM-dd''T''HH:mm') : null}"/>
+                </div>
 
-<form th:action="@{/despesas/periodo}" method="get">
-    <label>Início:</label>
-    <input type="date" name="inicio"
-           th:value="${inicio != null ? #dates.format(inicio, 'yyyy-MM-dd') : ''}"/>
+                <div class="col-md-4">
+                    <label class="form-label">Fim</label>
+                    <input type="datetime-local" class="form-control" name="fim" th:value="${fim != null ? #temporals.format(fim, 'yyyy-MM-dd''T''HH:mm') : null}"/>
+                </div>
 
-    <label>Fim:</label>
-    <input type="date" name="fim"
-           th:value="${fim != null ? #dates.format(fim, 'yyyy-MM-dd') : ''}"/>
-
-    <button type="submit">Filtrar período</button>
-</form>
-
-<br/>
-
-<table border="1">
-    <thead>
-    <tr>
-        <th>ID</th>
-        <th>Nome</th>
-        <th>Valor (R$)</th>
-        <th>Frequência</th>
-        <th>Data</th>
-        <th>Data Final</th>
-        <th>Ações</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    <tr th:each="d : ${despesas}">
-        <td th:text="${d.id}"></td>
-        <td th:text="${d.nome}"></td>
-        <td th:text="${d.valor}"></td>
-        <td th:text="${d.frequencia}"></td>
-        <td th:text="${d.dataDespesa != null ? #temporals.format(d.dataDespesa, 'dd/MM/yyyy HH:mm') : ''}"></td>
-        <td th:text="${d.dataFinal != null ? #temporals.format(d.dataFinal, 'dd/MM/yyyy HH:mm') : ' - '}"></td>
-        <td>
-            <a th:href="@{'/despesas/editar/' + ${d.id}}">Editar</a>
-
-            <form th:action="@{'/despesas/' + ${d.id} + '/excluir'}"
-                  method="post"
-                  style="display:inline;">
-                <button type="submit">Excluir</button>
+                <div class="col-md-4 d-grid">
+                    <button type="submit" class="btn btn-outline-primary">Filtrar período</button>
+                </div>
             </form>
-        </td>
-    </tr>
+        </div>
+    </div>
 
-    <tr th:if="${despesas == null or #lists.isEmpty(despesas)}">
-        <td colspan="6">Nenhuma despesa encontrada.</td>
-    </tr>
-    </tbody>
-</table>
+    <div class="card app-card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th class="text-end">Valor</th>
+                    <th>Frequência</th>
+                    <th>Data</th>
+                    <th>Data final</th>
+                    <th class="text-end">Ações</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="d : ${despesas}">
+                    <td th:text="${d.id}"></td>
+                    <td class="fw-semibold" th:text="${d.nome}"></td>
+                    <td class="text-end" th:text="${d.valor != null ? #numbers.formatDecimal(d.valor, 2, 2) : '-'}"></td>
+                    <td><span class="badge text-bg-secondary" th:text="${d.frequencia}"></span></td>
+                    <td th:text="${d.dataDespesa != null ? #temporals.format(d.dataDespesa, 'dd/MM/yyyy HH:mm') : ''}"></td>
+                    <td th:text="${d.dataFinal != null ? #temporals.format(d.dataFinal, 'dd/MM/yyyy HH:mm') : ' - '}"></td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-primary" th:href="@{'/despesas/editar/' + ${d.id}}">Editar</a>
+                        <form class="d-inline" th:action="@{'/despesas/' + ${d.id} + '/excluir'}" method="post" onsubmit="return confirm('Excluir esta despesa?')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${despesas == null or #lists.isEmpty(despesas)}">
+                    <td colspan="7" class="text-center text-muted py-4">Nenhuma despesa encontrada.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

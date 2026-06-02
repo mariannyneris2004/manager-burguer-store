@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Ingredientes do Adicional')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: navbar('adicionais')}"></div>
+
+<main class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <div class="page-eyebrow text-primary mb-1">Composição</div>
+            <h1 class="h3 mb-1">Ingredientes do adicional #<span th:text="${adicionalId}"></span></h1>
+            <p class="text-muted mb-0">Relacionamentos cadastrados para este adicional.</p>
+        </div>
+        <a class="btn btn-outline-secondary" th:href="@{/adicionais}">Voltar</a>
+    </div>
+
+    <div class="card app-card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Ingrediente ID</th>
+                    <th class="text-end">Quantidade</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${ingredientes}">
+                    <td th:text="${item.id}"></td>
+                    <td th:text="${item.ingredienteId}"></td>
+                    <td class="text-end" th:text="${item.quantidade != null ? #numbers.formatDecimal(item.quantidade, 2, 2) : '-'}"></td>
+                </tr>
+                <tr th:if="${ingredientes == null or #lists.isEmpty(ingredientes)}">
+                    <td colspan="3" class="text-center text-muted py-4">Nenhum ingrediente encontrado.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

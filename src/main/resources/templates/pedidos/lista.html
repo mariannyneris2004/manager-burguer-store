@@ -1,54 +1,69 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8"/>
-    <title>Pedidos</title>
-</head>
+<head th:replace="~{fragments/layout :: head('Pedidos')}"></head>
 <body>
+<div th:replace="~{fragments/layout :: navbar('pedidos')}"></div>
 
-<h1>Lista de Pedidos</h1>
+<main class="container py-4">
 
-<p>
-    <a th:href="@{/pedidos/novo}">Novo Pedido</a>
-    |
-    <a th:href="@{/relatorios/financeiro}">Relatório financeiro</a>
-</p>
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <div class="page-eyebrow text-primary mb-1">Vendas</div>
+            <h1 class="h3 mb-1">Pedidos</h1>
+            <p class="text-muted mb-0">Controle pedidos, lucros e recebimentos.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-primary" th:href="@{/pedidos/novo}">Novo pedido</a>
+            <a class="btn btn-outline-secondary" th:href="@{/relatorios/financeiro}">Relatório financeiro</a>
+        </div>
+    </div>
 
-<table border="1">
-    <thead>
-    <tr>
-        <th>ID</th>
-        <th>Cliente</th>
-        <th>Total</th>
-        <th>Custo</th>
-        <th>Lucro bruto</th>
-        <th>Valor Pago</th>
-        <th>Entrega/Retirada</th>
-        <th>Ações</th>
-    </tr>
-    </thead>
+    <div class="card app-card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th class="text-end">Total</th>
+                    <th class="text-end">Custo</th>
+                    <th class="text-end">Lucro bruto</th>
+                    <th class="text-end">Valor pago</th>
+                    <th>Entrega/Retirada</th>
+                    <th class="text-end">Ações</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="p : ${pedidos}">
+                    <td th:text="${p.id}"></td>
+                    <td class="fw-semibold" th:text="${p.nomeCliente}"></td>
+                    <td class="text-end" th:text="${p.valorTotal != null ? #numbers.formatDecimal(p.valorTotal, 2, 2) : '-'}"></td>
+                    <td class="text-end" th:text="${p.custoTotal != null ? #numbers.formatDecimal(p.custoTotal, 2, 2) : '-'}"></td>
+                    <td class="text-end" th:text="${p.lucroBruto != null ? #numbers.formatDecimal(p.lucroBruto, 2, 2) : '-'}"></td>
+                    <td class="text-end" th:text="${p.valorPago != null ? #numbers.formatDecimal(p.valorPago, 2, 2) : '-'}"></td>
+                    <td>
+                        <span class="badge text-bg-info" th:if="${p.tipoEntrega == T(com.bitokas.manager.model.pedidos.TipoEntrega).ENTREGA}">Entrega</span>
+                        <span class="badge text-bg-secondary" th:if="${p.tipoEntrega == T(com.bitokas.manager.model.pedidos.TipoEntrega).RETIRADA}">Retirada</span>
+                    </td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-primary" th:href="@{'/pedidos/' + ${p.id}}">Detalhes</a>
+                        <a class="btn btn-sm btn-outline-primary" th:href="@{'/pedidos/editar/' + ${p.id}}">Editar</a>
+                        <form class="d-inline" th:action="@{'/pedidos/' + ${p.id} + '/cancelar'}" method="post" onsubmit="return confirm('Cancelar este pedido?')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Cancelar</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${pedidos == null or #lists.isEmpty(pedidos)}">
+                    <td colspan="8" class="text-center text-muted py-4">Nenhum pedido cadastrado.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-    <tbody>
-    <tr th:each="p : ${pedidos}">
-        <td th:text="${p.id}"></td>
-        <td th:text="${p.nomeCliente}"></td>
-        <td th:text="${p.valorTotal}"></td>
-        <td th:text="${p.custoTotal}"></td>
-        <td th:text="${p.lucroBruto}"></td>
-        <td th:text="${p.valorPago}"></td>
-        <td th:text="${p.tipoEntrega == T(com.bitokas.manager.model.pedidos.TipoEntrega).ENTREGA} ? 'Entrega' : 'Retirada'"></td>
-        <td>
-            <a th:href="@{'/pedidos/' + ${p.id}}">Detalhes</a>
-            |
-            <a th:href="@{'/pedidos/editar/' + ${p.id}}">Editar</a>
-            <form th:action="@{'/pedidos/' + ${p.id} + '/cancelar'}"
-                  method="post" style="display:inline;">
-                <button type="submit">Cancelar</button>
-            </form>
-        </td>
-    </tr>
-    </tbody>
-</table>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

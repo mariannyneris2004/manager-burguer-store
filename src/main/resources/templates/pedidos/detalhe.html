@@ -1,55 +1,83 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8"/>
-    <title>Pedido</title>
-</head>
+<head th:replace="~{fragments/layout :: head('Pedido')}"></head>
 <body>
+<div th:replace="~{fragments/layout :: navbar('pedidos')}"></div>
 
-<h1>Detalhes do Pedido</h1>
+<main class="container py-4">
 
-<p><a th:href="@{/pedidos}">Voltar</a></p>
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <div class="page-eyebrow text-primary mb-1">Detalhes</div>
+            <h1 class="h3 mb-1">Pedido #<span th:text="${pedido.id}"></span></h1>
+            <p class="text-muted mb-0">Resumo completo do pedido e seus itens.</p>
+        </div>
+        <a class="btn btn-outline-secondary" th:href="@{/pedidos}">Voltar</a>
+    </div>
 
-<p><strong>ID:</strong> <span th:text="${pedido.id}"></span></p>
-<p><strong>Cliente:</strong> <span th:text="${pedido.nomeCliente}"></span></p>
-<p><strong>Data/Hora:</strong> <span th:text="${pedido.dataHora}"></span></p>
-<p><strong>Total:</strong> <span th:text="${pedido.valorTotal}"></span></p>
-<p><strong>Custo total:</strong> <span th:text="${pedido.custoTotal}"></span></p>
-<p><strong>Lucro bruto:</strong> <span th:text="${pedido.lucroBruto}"></span></p>
-<p><strong>Valor pago:</strong> <span th:text="${pedido.valorPago}"></span></p>
-<p><strong>Entrega/Retirada:</strong> <span th:text="${pedido.tipoEntrega}"></span></p>
+    <div class="row g-3 mb-4">
+        <div class="col-md-3"><div class="card app-card h-100"><div class="card-body"><div class="text-muted small">Cliente</div><div class="fw-semibold" th:text="${pedido.nomeCliente}"></div></div></div></div>
+        <div class="col-md-3"><div class="card app-card h-100"><div class="card-body"><div class="text-muted small">Data/Hora</div><div class="fw-semibold" th:text="${pedido.dataHora != null ? #temporals.format(pedido.dataHora, 'dd/MM/yyyy HH:mm') : ''}"></div></div></div></div>
+        <div class="col-md-3"><div class="card app-card h-100"><div class="card-body"><div class="text-muted small">Total</div><div class="fw-semibold" th:text="${pedido.valorTotal != null ? #numbers.formatDecimal(pedido.valorTotal, 2, 2) : '-'}"></div></div></div></div>
+        <div class="col-md-3"><div class="card app-card h-100"><div class="card-body"><div class="text-muted small">Lucro bruto</div><div class="fw-semibold" th:text="${pedido.lucroBruto != null ? #numbers.formatDecimal(pedido.lucroBruto, 2, 2) : '-'}"></div></div></div></div>
+    </div>
 
-<h3>Produtos</h3>
-<table border="1">
-    <thead>
-    <tr>
-        <th>Produto</th>
-        <th>Qtd</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="item : ${pedido.produtos}">
-        <td th:text="${item.produtoId}"></td>
-        <td th:text="${item.quantidade}"></td>
-    </tr>
-    </tbody>
-</table>
+    <div class="card app-card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3"><strong>Custo total:</strong> <span th:text="${pedido.custoTotal != null ? #numbers.formatDecimal(pedido.custoTotal, 2, 2) : '-'}"></span></div>
+                <div class="col-md-3"><strong>Valor pago:</strong> <span th:text="${pedido.valorPago != null ? #numbers.formatDecimal(pedido.valorPago, 2, 2) : '-'}"></span></div>
+                <div class="col-md-3"><strong>Entrega/Retirada:</strong> <span class="badge text-bg-info" th:text="${pedido.tipoEntrega}"></span></div>
+                <div class="col-md-3"><strong>Valor entrega:</strong> <span th:text="${pedido.valorEntrega != null ? #numbers.formatDecimal(pedido.valorEntrega, 2, 2) : '-'}"></span></div>
+            </div>
+        </div>
+    </div>
 
-<h3>Adicionais</h3>
-<table border="1">
-    <thead>
-    <tr>
-        <th>Adicional</th>
-        <th>Qtd</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="item : ${pedido.adicionais}">
-        <td th:text="${item.adicionalId}"></td>
-        <td th:text="${item.quantidade}"></td>
-    </tr>
-    </tbody>
-</table>
+    <div class="card app-card mb-4">
+        <div class="card-header bg-white"><h2 class="h5 mb-0">Produtos</h2></div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Produto ID</th>
+                    <th class="text-end">Quantidade</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${pedido.produtos}">
+                    <td th:text="${item.produtoId}"></td>
+                    <td class="text-end" th:text="${item.quantidade != null ? item.quantidade : '-'}"></td>
+                </tr>
+                <tr th:if="${pedido.produtos == null or #lists.isEmpty(pedido.produtos)}"><td colspan="2" class="text-center text-muted py-4">Nenhum produto no pedido.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card app-card">
+        <div class="card-header bg-white"><h2 class="h5 mb-0">Adicionais</h2></div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Adicional ID</th>
+                    <th class="text-end">Quantidade</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${pedido.adicionais}">
+                    <td th:text="${item.adicionalId}"></td>
+                    <td class="text-end" th:text="${item.quantidade != null ? item.quantidade : '-'}"></td>
+                </tr>
+                <tr th:if="${pedido.adicionais == null or #lists.isEmpty(pedido.adicionais)}"><td colspan="2" class="text-center text-muted py-4">Nenhum adicional no pedido.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

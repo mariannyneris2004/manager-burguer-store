@@ -1,150 +1,171 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8"/>
-    <title>Cadastro de Compra</title>
-</head>
+<head th:replace="~{fragments/layout :: head('Cadastro de Compra')}"></head>
 <body>
+<div th:replace="~{fragments/layout :: navbar('compras')}"></div>
 
-<h1 th:text="${compra.id != null ? 'Editar Compra' : 'Nova Compra'}"></h1>
+<main class="container py-4">
 
-<form th:action="@{/compras/salvar}" th:object="${compra}" method="post">
-    <input type="hidden" th:field="*{id}"/>
-
-    <label>Data:</label>
-    <input type="date" th:field="*{dataCompra}" required/><br/><br/>
-
-    <h3>Itens da compra</h3>
-
-    <div>
-        <label>Ingrediente:</label>
-        <select id="ingredienteSelect">
-            <option value="">Selecione...</option>
-            <option th:each="ing : ${ingredientesDisponiveis}"
-                    th:value="${ing.id}"
-                    th:text="${ing.nome}"
-                    th:attr="data-qtd=${ing.quantidadePorUnidadeCompra},
-                             data-consumo=${ing.unidadeConsumo},
-                             data-compra=${ing.unidadeCompra}">
-            </option>
-        </select>
-
-        <label>Quantidade comprada:</label>
-        <input type="number" id="qtdCompra" step="0.001" min="0.001"/>
-
-        <label>Unidades por embalagem:</label>
-        <input type="number" id="unidadesPorEmbalagem" step="0.001" min="0.001"/>
-
-        <label>Valor da embalagem:</label>
-        <input type="number" id="valorUnitario" step="0.01" min="0.01"/>
-
-        <button type="button" onclick="adicionarItem()">Adicionar item</button>
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <div class="page-eyebrow text-primary mb-1">Entrada de mercadoria</div>
+            <h1 class="h3 mb-1" th:text="${compra.id != null ? 'Editar Compra' : 'Nova Compra'}"></h1>
+            <p class="text-muted mb-0">Adicione itens manualmente e veja o impacto no estoque.</p>
+        </div>
+        <a class="btn btn-outline-secondary" th:href="@{/compras}">Voltar</a>
     </div>
 
-    <br/>
+    <form th:action="@{/compras/salvar}" th:object="${compra}" method="post">
+        <input type="hidden" th:field="*{id}"/>
 
-    <table border="1" width="100%">
-        <thead>
-        <tr>
-            <th>Ingrediente</th>
-            <th>Qtd comprada</th>
-            <th>Unid/embalagem</th>
-            <th>Qtd estoque</th>
-            <th>Valor embalagem</th>
-            <th>Custo unitário estoque</th>
-            <th>Total item</th>
-            <th>Ações</th>
-        </tr>
-        </thead>
-        <tbody id="tbodyItens">
-        <tr th:each="item, i : *{itens}">
-            <td>
-                <select th:field="*{itens[__${i.index}__].ingredienteId}" required>
-                    <option value="">Selecione...</option>
-                    <option th:each="ing : ${ingredientesDisponiveis}"
-                            th:value="${ing.id}"
-                            th:text="${ing.nome}"
-                            th:selected="${ing.id == item.ingredienteId}">
-                    </option>
-                </select>
-            </td>
-            <td><input type="number" step="0.001" min="0.001" th:field="*{itens[__${i.index}__].quantidade}" required/></td>
-            <td><input type="number" step="0.001" min="0.001" th:field="*{itens[__${i.index}__].unidadesPorEmbalagem}" required/></td>
-            <td th:text="${item.quantidadeEstoque}"></td>
-            <td><input type="number" step="0.01" min="0.01" th:field="*{itens[__${i.index}__].valorUnitario}" required/></td>
-            <td th:text="${item.custoUnitarioEstoque}"></td>
-            <td th:text="${item.valorTotalItem}"></td>
-            <td>
-                <button type="button" onclick="removerLinha(this)">Remover</button>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+        <div class="card app-card mb-4">
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">Data</label>
+                        <input type="date" class="form-control" th:field="*{dataCompra}" required/>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="alert alert-info mb-0">Use o painel abaixo para montar a lista de itens da compra.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <br/>
+        <div class="card app-card mb-4">
+            <div class="card-header bg-white"><h2 class="h5 mb-0">Adicionar item</h2></div>
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">Ingrediente</label>
+                        <select class="form-select" id="ingredienteSelect">
+                            <option value="">Selecione...</option>
+                            <option th:each="ing : ${ingredientesDisponiveis}"
+                                    th:value="${ing.id}"
+                                    th:text="${ing.nome}"
+                                    th:attr="data-qtd=${ing.quantidadePorUnidadeCompra},
+                                             data-consumo=${ing.unidadeConsumo},
+                                             data-compra=${ing.unidadeCompra}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-2"><label class="form-label">Qtd comprada</label><input type="number" class="form-control" id="qtdCompra" step="0.001" min="0.001"/></div>
+                    <div class="col-md-2"><label class="form-label">Unid/embalagem</label><input type="number" class="form-control" id="unidadesPorEmbalagem" step="0.001" min="0.001"/></div>
+                    <div class="col-md-2"><label class="form-label">Valor embalagem</label><input type="number" class="form-control" id="valorUnitario" step="0.01" min="0.01"/></div>
+                    <div class="col-md-2 d-grid"><button type="button" class="btn btn-primary" onclick="adicionarItem()">Adicionar</button></div>
+                </div>
+            </div>
+        </div>
 
-    <button type="submit">Salvar</button>
-    <a th:href="@{/compras}">Cancelar</a>
-</form>
+        <div class="card app-card mb-4">
+            <div class="card-header bg-white"><h2 class="h5 mb-0">Itens da compra</h2></div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Ingrediente</th>
+                        <th class="text-end">Qtd comprada</th>
+                        <th class="text-end">Unid/embalagem</th>
+                        <th class="text-end">Qtd estoque</th>
+                        <th class="text-end">Valor embalagem</th>
+                        <th class="text-end">Custo unitário estoque</th>
+                        <th class="text-end">Total item</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tbodyItens">
+                    <tr th:each="item, i : *{itens}">
+                        <td>
+                            <input type="hidden" th:field="*{itens[__${i.index}__].ingredienteId}" />
+                            <select class="form-select" th:field="*{itens[__${i.index}__].ingredienteId}" required>
+                                <option value="">Selecione...</option>
+                                <option th:each="ing : ${ingredientesDisponiveis}"
+                                        th:value="${ing.id}"
+                                        th:text="${ing.nome}"
+                                        th:selected="${ing.id == item.ingredienteId}">
+                                </option>
+                            </select>
+                        </td>
+                        <td><input type="number" class="form-control text-end" step="0.001" min="0.001" th:field="*{itens[__${i.index}__].quantidade}" required/></td>
+                        <td><input type="number" class="form-control text-end" step="0.001" min="0.001" th:field="*{itens[__${i.index}__].unidadesPorEmbalagem}" required/></td>
+                        <td class="text-end" th:text="${item.quantidadeEstoque != null ? #numbers.formatDecimal(item.quantidadeEstoque, 1, 3) : '-'}"></td>
+                        <td><input type="number" class="form-control text-end" step="0.01" min="0.01" th:field="*{itens[__${i.index}__].valorUnitario}" required/></td>
+                        <td class="text-end" th:text="${item.custoUnitarioEstoque != null ? #numbers.formatDecimal(item.custoUnitarioEstoque, 2, 4) : '-'}"></td>
+                        <td class="text-end" th:text="${item.valorTotalItem != null ? #numbers.formatDecimal(item.valorTotalItem, 2, 2) : '-'}"></td>
+                        <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger" onclick="removerLinha(this)">Remover</button></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-<script th:inline="javascript">
-    let indice = /*[[${compra.itens != null ? compra.itens.size() : 0}]]*/ 0;
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Salvar</button>
+            <a class="btn btn-outline-secondary" th:href="@{/compras}">Cancelar</a>
+        </div>
+    </form>
 
-    function adicionarItem() {
-        const select = document.getElementById('ingredienteSelect');
-        const ingredienteId = select.value;
-        const option = select.options[select.selectedIndex];
-        const nome = option.text;
-        const qtdCompra = parseFloat(document.getElementById('qtdCompra').value);
-        const unidadesPorEmbalagem = parseFloat(document.getElementById('unidadesPorEmbalagem').value);
-        const valorUnitario = parseFloat(document.getElementById('valorUnitario').value);
+    <script th:inline="javascript">
+        let indice = /*[[${compra.itens != null ? compra.itens.size() : 0}]]*/ 0;
 
-        if (!ingredienteId || !qtdCompra || !unidadesPorEmbalagem || !valorUnitario) {
-            alert('Preencha ingrediente, quantidade, unidades por embalagem e valor.');
-            return;
+        function adicionarItem() {
+            const select = document.getElementById('ingredienteSelect');
+            const ingredienteId = select.value;
+            const option = select.options[select.selectedIndex];
+            const nome = option.text;
+            const qtdCompra = parseFloat(document.getElementById('qtdCompra').value);
+            const unidadesPorEmbalagem = parseFloat(document.getElementById('unidadesPorEmbalagem').value);
+            const valorUnitario = parseFloat(document.getElementById('valorUnitario').value);
+
+            if (!ingredienteId || !qtdCompra || !unidadesPorEmbalagem || !valorUnitario) {
+                alert('Preencha ingrediente, quantidade, unidades por embalagem e valor.');
+                return;
+            }
+
+            const qtdEstoque = qtdCompra * unidadesPorEmbalagem;
+            const custoUnitario = qtdEstoque === 0 ? 0 : (qtdCompra * valorUnitario) / qtdEstoque;
+            const total = qtdCompra * valorUnitario;
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>
+                    <input type="hidden" name="itens[${indice}].ingredienteId" value="${ingredienteId}">
+                    <div class="fw-semibold">${nome}</div>
+                </td>
+                <td><input type="number" class="form-control text-end" step="0.001" min="0.001" name="itens[${indice}].quantidade" value="${qtdCompra}" required></td>
+                <td><input type="number" class="form-control text-end" step="0.001" min="0.001" name="itens[${indice}].unidadesPorEmbalagem" value="${unidadesPorEmbalagem}" required></td>
+                <td class="text-end"><input type="hidden" name="itens[${indice}].quantidadeEstoque" value="${qtdEstoque.toFixed(3)}">${qtdEstoque.toFixed(3)}</td>
+                <td><input type="number" class="form-control text-end" step="0.01" min="0.01" name="itens[${indice}].valorUnitario" value="${valorUnitario}" required></td>
+                <td class="text-end"><input type="hidden" name="itens[${indice}].custoUnitarioEstoque" value="${custoUnitario.toFixed(4)}">${custoUnitario.toFixed(4)}</td>
+                <td class="text-end"><input type="hidden" name="itens[${indice}].valorTotalItem" value="${total.toFixed(2)}">${total.toFixed(2)}</td>
+                <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger" onclick="removerLinha(this)">Remover</button></td>
+            `;
+            document.getElementById('tbodyItens').appendChild(tr);
+            indice++;
+
+            select.value = '';
+            document.getElementById('qtdCompra').value = '';
+            document.getElementById('unidadesPorEmbalagem').value = '';
+            document.getElementById('valorUnitario').value = '';
         }
 
-        const qtdEstoque = qtdCompra * unidadesPorEmbalagem;
-        const custoUnitario = qtdEstoque === 0 ? 0 : (qtdCompra * valorUnitario) / qtdEstoque;
-        const total = qtdCompra * valorUnitario;
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>
-                <input type="hidden" name="itens[${indice}].ingredienteId" value="${ingredienteId}">
-                ${nome}
-            </td>
-            <td><input type="number" step="0.001" min="0.001" name="itens[${indice}].quantidade" value="${qtdCompra}" required></td>
-            <td><input type="number" step="0.001" min="0.001" name="itens[${indice}].unidadesPorEmbalagem" value="${unidadesPorEmbalagem}" required></td>
-            <td><input type="hidden" name="itens[${indice}].quantidadeEstoque" value="${qtdEstoque.toFixed(3)}">${qtdEstoque.toFixed(3)}</td>
-            <td><input type="number" step="0.01" min="0.01" name="itens[${indice}].valorUnitario" value="${valorUnitario}" required></td>
-            <td><input type="hidden" name="itens[${indice}].custoUnitarioEstoque" value="${custoUnitario.toFixed(4)}">${custoUnitario.toFixed(4)}</td>
-            <td><input type="hidden" name="itens[${indice}].valorTotalItem" value="${total.toFixed(2)}">${total.toFixed(2)}</td>
-            <td><button type="button" onclick="removerLinha(this)">Remover</button></td>
-        `;
-        document.getElementById('tbodyItens').appendChild(tr);
-        indice++;
-
-        select.value = '';
-        document.getElementById('qtdCompra').value = '';
-        document.getElementById('unidadesPorEmbalagem').value = '';
-        document.getElementById('valorUnitario').value = '';
-    }
-
-    function removerLinha(botao) {
-        botao.closest('tr').remove();
-    }
-
-    document.getElementById('ingredienteSelect').addEventListener('change', function () {
-        const opt = this.options[this.selectedIndex];
-        if (!opt.value) return;
-
-        const defaultQtd = opt.getAttribute('data-qtd');
-        if (defaultQtd) {
-            document.getElementById('unidadesPorEmbalagem').value = defaultQtd;
+        function removerLinha(botao) {
+            botao.closest('tr').remove();
         }
-    });
-</script>
+
+        document.getElementById('ingredienteSelect').addEventListener('change', function () {
+            const opt = this.options[this.selectedIndex];
+            if (!opt.value) return;
+            const defaultQtd = opt.getAttribute('data-qtd');
+            if (defaultQtd) {
+                document.getElementById('unidadesPorEmbalagem').value = defaultQtd;
+            }
+        });
+    </script>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

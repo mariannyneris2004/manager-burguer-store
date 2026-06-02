@@ -1,47 +1,62 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8"/>
-    <title>Detalhes da Compra</title>
-</head>
+<head th:replace="~{fragments/layout :: head('Detalhes da Compra')}"></head>
 <body>
+<div th:replace="~{fragments/layout :: navbar('compras')}"></div>
 
-<h1>Detalhes da Compra</h1>
+<main class="container py-4">
 
-<p><strong>ID:</strong> <span th:text="${compra.id}"></span></p>
-<p><strong>Data:</strong> <span th:text="${compra.dataCompra}"></span></p>
-<p><strong>Valor Total:</strong> R$ <span th:text="${compra.valorTotal}"></span></p>
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <div class="page-eyebrow text-primary mb-1">Registro</div>
+            <h1 class="h3 mb-1">Detalhes da Compra</h1>
+            <p class="text-muted mb-0">Resumo dos itens e impacto financeiro da compra.</p>
+        </div>
+        <a class="btn btn-outline-secondary" th:href="@{/compras}">Voltar</a>
+    </div>
 
-<h3>Itens</h3>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><div class="card app-card h-100"><div class="card-body"><div class="text-muted small">ID</div><div class="fs-4 fw-semibold" th:text="${compra.id}"></div></div></div></div>
+        <div class="col-md-4"><div class="card app-card h-100"><div class="card-body"><div class="text-muted small">Data</div><div class="fs-4 fw-semibold" th:text="${compra.dataCompra != null ? #dates.format(compra.dataCompra, 'dd/MM/yyyy') : ''}"></div></div></div></div>
+        <div class="col-md-4"><div class="card app-card h-100"><div class="card-body"><div class="text-muted small">Valor total</div><div class="fs-4 fw-semibold" th:text="${compra.valorTotal != null ? #numbers.formatDecimal(compra.valorTotal, 2, 2) : '-'}"></div></div></div></div>
+    </div>
 
-<table border="1">
-    <thead>
-    <tr>
-        <th>Ingrediente</th>
-        <th>Qtd comprada</th>
-        <th>Unid/embalagem</th>
-        <th>Qtd estoque</th>
-        <th>Valor embalagem</th>
-        <th>Custo unitário estoque</th>
-        <th>Total item</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="item, i : ${compra.itens}">
-        <td th:text="${ingredientes[i.index].nome}"></td>
-        <td th:text="${item.quantidade}"></td>
-        <td th:text="${item.unidadesPorEmbalagem}"></td>
-        <td th:text="${item.quantidadeEstoque}"></td>
-        <td th:text="${item.valorUnitario}"></td>
-        <td th:text="${item.custoUnitarioEstoque}"></td>
-        <td th:text="${item.valorTotalItem}"></td>
-    </tr>
-    </tbody>
-</table>
+    <div class="card app-card">
+        <div class="card-header bg-white"><h2 class="h5 mb-0">Itens</h2></div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Ingrediente</th>
+                    <th class="text-end">Qtd comprada</th>
+                    <th class="text-end">Unid/embalagem</th>
+                    <th class="text-end">Qtd estoque</th>
+                    <th class="text-end">Valor embalagem</th>
+                    <th class="text-end">Custo unitário estoque</th>
+                    <th class="text-end">Total item</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item, i : ${compra.itens}">
+                    <td th:text="${ingredientes[i.index].nome}"></td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(item.quantidade, 1, 3)}"></td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(item.unidadesPorEmbalagem, 1, 3)}"></td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(item.quantidadeEstoque, 1, 3)}"></td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(item.valorUnitario, 2, 2)}"></td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(item.custoUnitarioEstoque, 2, 4)}"></td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(item.valorTotalItem, 2, 2)}"></td>
+                </tr>
+                <tr th:if="${compra.itens == null or #lists.isEmpty(compra.itens)}">
+                    <td colspan="7" class="text-center text-muted py-4">Nenhum item nesta compra.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-<p>
-    <a th:href="@{/compras}">Voltar</a>
-</p>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

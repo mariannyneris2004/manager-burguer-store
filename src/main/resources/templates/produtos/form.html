@@ -1,97 +1,136 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8"/>
-    <title>Produto</title>
-</head>
+<head th:replace="~{fragments/layout :: head('Produto')}"></head>
 <body>
+<div th:replace="~{fragments/layout :: navbar('produtos')}"></div>
 
-<h1 th:text="${produto.id != null} ? 'Editar Produto' : 'Novo Produto'"></h1>
+<main class="container py-4">
 
-<form th:action="@{/produtos/salvar}" th:object="${produto}" method="post">
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <div class="page-eyebrow text-primary mb-1">Cadastro</div>
+            <h1 class="h3 mb-1" th:text="${produto.id != null} ? 'Editar Produto' : 'Novo Produto'"></h1>
+            <p class="text-muted mb-0">Defina preço, categoria, ingredientes e adicionais permitidos.</p>
+        </div>
+        <a class="btn btn-outline-secondary" th:href="@{/produtos}">Voltar</a>
+    </div>
 
-  <input type="hidden" th:field="*{id}"/>
+    <form th:action="@{/produtos/salvar}" th:object="${produto}" method="post">
+        <input type="hidden" th:field="*{id}"/>
 
-  <div>
-    <label>Nome:</label>
-    <input type="text" th:field="*{nome}" required/>
-  </div>
+        <div class="card app-card mb-4">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Nome</label>
+                        <input type="text" class="form-control" th:field="*{nome}" required/>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Valor de venda</label>
+                        <input type="number" class="form-control" step="0.01" min="0" th:field="*{valorVenda}" required/>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Categoria</label>
+                        <select class="form-select" th:field="*{categoria}" required>
+                            <option value="">Selecione...</option>
+                            <option value="LANCHE">Lanche</option>
+                            <option value="BEBIDA">Bebida</option>
+                            <option value="PORCAO">Porção</option>
+                            <option value="OUTRO">Outro</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-  <br/>
+        <div class="card app-card mb-4">
+            <div class="card-header bg-white"><h2 class="h5 mb-0">Ingredientes</h2></div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Selecionar</th>
+                            <th>Ingrediente</th>
+                            <th style="width: 180px;">Quantidade</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="ing, i : ${ingredientesDisponiveis}">
+                            <td>
+                                <input type="hidden" th:field="*{ingredientes[__${i.index}__].id}" />
+                                <input type="hidden" th:field="*{ingredientes[__${i.index}__].produtoId}" />
+                                <input type="hidden" th:field="*{ingredientes[__${i.index}__].ingredienteId}" />
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" th:field="*{ingredientes[__${i.index}__].selecionado}" />
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold" th:text="${ing.nome}"></div>
+                                <small class="text-muted" th:text="${ing.unidadeConsumo + ' / compra: ' + ing.unidadeCompra}"></small>
+                            </td>
+                            <td><input type="number" class="form-control" step="0.01" min="0" th:field="*{ingredientes[__${i.index}__].quantidade}" /></td>
+                        </tr>
+                        <tr th:if="${ingredientesDisponiveis == null or #lists.isEmpty(ingredientesDisponiveis)}">
+                            <td colspan="3" class="text-center text-muted py-3">Nenhum ingrediente disponível.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-  <div>
-    <label>Valor de Venda:</label>
-    <input type="number" step="0.01" th:field="*{valorVenda}" required/>
-  </div>
+        <div class="card app-card mb-4">
+            <div class="card-header bg-white"><h2 class="h5 mb-0">Adicionais permitidos</h2></div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Selecionar</th>
+                            <th>Adicional</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="adc, i : ${adicionaisDisponiveis}">
+                            <td>
+                                <input type="hidden" th:field="*{adicionaisPermitidos[__${i.index}__].id}" />
+                                <input type="hidden" th:field="*{adicionaisPermitidos[__${i.index}__].produtoId}" />
+                                <input type="hidden" th:field="*{adicionaisPermitidos[__${i.index}__].adicionalId}" />
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" th:field="*{adicionaisPermitidos[__${i.index}__].selecionado}" />
+                                </div>
+                            </td>
+                            <td class="fw-semibold" th:text="${adc.nome}"></td>
+                        </tr>
+                        <tr th:if="${adicionaisDisponiveis == null or #lists.isEmpty(adicionaisDisponiveis)}">
+                            <td colspan="2" class="text-center text-muted py-3">Nenhum adicional disponível.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-  <br/>
+        <div class="card app-card mb-4" th:if="${produto.custoUnitario != null}">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4"><div class="p-3 border rounded-3 bg-light"><div class="text-muted small">Custo atual</div><div class="fs-5 fw-semibold" th:text="${#numbers.formatDecimal(produto.custoUnitario, 2, 2)}"></div></div></div>
+                    <div class="col-md-4"><div class="p-3 border rounded-3 bg-light"><div class="text-muted small">Lucro atual</div><div class="fs-5 fw-semibold" th:text="${#numbers.formatDecimal(produto.lucroUnitario, 2, 2)}"></div></div></div>
+                    <div class="col-md-4"><div class="p-3 border rounded-3 bg-light"><div class="text-muted small">Margem</div><div class="fs-5 fw-semibold" th:text="${#numbers.formatDecimal(produto.margemPercentual, 1, 2)} + '%'"></div></div></div>
+                </div>
+            </div>
+        </div>
 
-  <div>
-    <label>Categoria:</label>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Salvar</button>
+            <a class="btn btn-outline-secondary" th:href="@{/produtos}">Cancelar</a>
+        </div>
+    </form>
 
-    <select th:field="*{categoria}" required>
-      <option value="">Selecione...</option>
-      <option value="LANCHE">Lanche</option>
-      <option value="BEBIDA">Bebida</option>
-      <option value="PORCAO">Porção</option>
-      <option value="OUTRO">Outro</option>
-    </select>
-  </div>
+</main>
 
-  <br/><br/>
-
-  <h3>Ingredientes</h3>
-
-  <div th:each="ing, i : ${ingredientesDisponiveis}">
-    <input type="hidden" th:field="*{ingredientes[__${i.index}__].id}" />
-    <input type="hidden" th:field="*{ingredientes[__${i.index}__].produtoId}" />
-    <input type="hidden" th:field="*{ingredientes[__${i.index}__].ingredienteId}" />
-
-    <label>
-      <input type="checkbox" th:field="*{ingredientes[__${i.index}__].selecionado}" />
-      <span th:text="${ing.nome}"></span>
-    </label>
-
-    <input type="number"
-           step="0.01"
-           min="0"
-           th:field="*{ingredientes[__${i.index}__].quantidade}" />
-    <small th:text="${ing.unidadeConsumo}"></small>
-    <br/>
-  </div>
-
-  <br/><br/>
-
-  <h3>Adicionais Permitidos</h3>
-
-  <div th:each="adc, i : ${adicionaisDisponiveis}">
-    <input type="hidden" th:field="*{adicionaisPermitidos[__${i.index}__].id}" />
-    <input type="hidden" th:field="*{adicionaisPermitidos[__${i.index}__].produtoId}" />
-    <input type="hidden" th:field="*{adicionaisPermitidos[__${i.index}__].adicionalId}" />
-
-    <label>
-      <input type="checkbox" th:field="*{adicionaisPermitidos[__${i.index}__].selecionado}" />
-      <span th:text="${adc.nome}"></span>
-    </label>
-
-    <br/>
-  </div>
-
-  <br/><br/>
-
-  <div th:if="${produto.custoUnitario != null}">
-      <strong>Custo atual:</strong> <span th:text="${produto.custoUnitario}"></span><br/>
-      <strong>Lucro atual:</strong> <span th:text="${produto.lucroUnitario}"></span><br/>
-      <strong>Margem:</strong> <span th:text="${#numbers.formatDecimal(produto.margemPercentual, 1, 2)}"></span>%
-  </div>
-
-  <br/>
-
-  <button type="submit">Salvar</button>
-
-  <a th:href="@{/produtos}">Cancelar</a>
-
-</form>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

@@ -1,69 +1,91 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8"/>
-    <title>Detalhe do Estoque</title>
-</head>
+<head th:replace="~{fragments/layout :: head('Detalhe do Estoque')}"></head>
 <body>
+<div th:replace="~{fragments/layout :: navbar('estoque')}"></div>
 
-<h1>Detalhe do Estoque</h1>
+<main class="container py-4">
 
-<p><a th:href="@{/estoque}">Voltar para o estoque</a></p>
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <div class="page-eyebrow text-primary mb-1">Estoque do ingrediente</div>
+            <h1 class="h3 mb-1" th:text="${ingrediente.nome}"></h1>
+            <p class="text-muted mb-0">Resumo do saldo, custo e movimentações.</p>
+        </div>
+        <a class="btn btn-outline-secondary" th:href="@{/estoque}">Voltar</a>
+    </div>
 
-<h3 th:text="${ingrediente.nome}"></h3>
+    <div class="row g-3 mb-4">
+        <div class="col-md-3"><div class="card app-card h-100"><div class="card-body"><div class="text-muted small">Quantidade</div><div class="fs-4 fw-semibold" th:text="${itemEstoque.quantidade != null ? #numbers.formatDecimal(itemEstoque.quantidade, 1, 3) : '-'}"></div></div></div></div>
+        <div class="col-md-3"><div class="card app-card h-100"><div class="card-body"><div class="text-muted small">Custo médio</div><div class="fs-4 fw-semibold" th:text="${itemEstoque.custoMedioAtual != null ? #numbers.formatDecimal(itemEstoque.custoMedioAtual, 2, 2) : '-'}"></div></div></div></div>
+        <div class="col-md-3"><div class="card app-card h-100"><div class="card-body"><div class="text-muted small">Valor total</div><div class="fs-4 fw-semibold" th:text="${itemEstoque.valorTotalEstoque != null ? #numbers.formatDecimal(itemEstoque.valorTotalEstoque, 2, 2) : '-'}"></div></div></div></div>
+        <div class="col-md-3"><div class="card app-card h-100"><div class="card-body"><div class="text-muted small">Unidade consumo</div><div class="fs-4 fw-semibold" th:text="${ingrediente.unidadeConsumo}"></div></div></div></div>
+    </div>
 
-<p><strong>ID do ingrediente:</strong> <span th:text="${ingrediente.id}"></span></p>
-<p><strong>Unidade consumo:</strong> <span th:text="${ingrediente.unidadeConsumo}"></span></p>
-<p><strong>Unidade compra:</strong> <span th:text="${ingrediente.unidadeCompra}"></span></p>
-<p><strong>Qtd por compra:</strong> <span th:text="${ingrediente.quantidadePorUnidadeCompra}"></span></p>
+    <div class="card app-card mb-4">
+        <div class="card-body">
+            <h2 class="h5 mb-3">Dados do ingrediente</h2>
+            <div class="row g-3">
+                <div class="col-md-3"><strong>ID:</strong> <span th:text="${ingrediente.id}"></span></div>
+                <div class="col-md-3"><strong>Unidade compra:</strong> <span th:text="${ingrediente.unidadeCompra}"></span></div>
+                <div class="col-md-3"><strong>Qtd por compra:</strong> <span th:text="${ingrediente.quantidadePorUnidadeCompra}"></span></div>
+                <div class="col-md-3"><strong>Marca:</strong> <span th:text="${ingrediente.marca}"></span></div>
+            </div>
+        </div>
+    </div>
 
-<p><strong>Quantidade em estoque:</strong> <span th:text="${itemEstoque.quantidade}"></span></p>
-<p><strong>Custo médio:</strong> <span th:text="${itemEstoque.custoMedioAtual}"></span></p>
-<p><strong>Valor total em estoque:</strong> <span th:text="${itemEstoque.valorTotalEstoque}"></span></p>
+    <div class="card app-card mb-4">
+        <div class="card-body">
+            <h2 class="h5 mb-3">Ajuste manual</h2>
+            <form class="row g-3 align-items-end" method="post">
+                <input type="hidden" name="ingredienteId" th:value="${ingrediente.id}"/>
+                <div class="col-md-9">
+                    <label class="form-label">Quantidade (negativo para baixar)</label>
+                    <input type="number" class="form-control" name="quantidade" step="0.001" required/>
+                </div>
+                <div class="col-md-3 d-grid">
+                    <button type="submit" class="btn btn-primary" th:formaction="@{/estoque/ajustar}">Aplicar ajuste</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-<hr/>
+    <div class="card app-card">
+        <div class="card-header bg-white"><h2 class="h5 mb-0">Movimentações</h2></div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Data/Hora</th>
+                    <th>Tipo</th>
+                    <th class="text-end">Qtd</th>
+                    <th class="text-end">Custo unit.</th>
+                    <th class="text-end">Valor total</th>
+                    <th>Origem</th>
+                    <th>Observação</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="mov : ${movimentos}">
+                    <td th:text="${#temporals.format(mov.dataHora, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td><span class="badge text-bg-secondary" th:text="${mov.tipo}"></span></td>
+                    <td class="text-end" th:text="${mov.quantidade != null ? #numbers.formatDecimal(mov.quantidade, 1, 3) : '-'}"></td>
+                    <td class="text-end" th:text="${mov.custoUnitario != null ? #numbers.formatDecimal(mov.custoUnitario, 2, 2) : '-'}"></td>
+                    <td class="text-end" th:text="${mov.valorTotal != null ? #numbers.formatDecimal(mov.valorTotal, 2, 2) : '-'}"></td>
+                    <td th:text="${mov.origemTipo + ' #' + mov.origemId}"></td>
+                    <td th:text="${mov.observacao}"></td>
+                </tr>
+                <tr th:if="${movimentos == null or #lists.isEmpty(movimentos)}">
+                    <td colspan="7" class="text-center text-muted py-4">Nenhuma movimentação registrada.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-<h3>Ajuste manual</h3>
-<form method="post">
-    <input type="hidden" name="ingredienteId" th:value="${ingrediente.id}"/>
+</main>
 
-    <label>Quantidade (negativo para baixar):</label>
-    <input type="number" name="quantidade" step="0.001" required/>
-
-    <button type="submit" th:formaction="@{/estoque/ajustar}">Aplicar ajuste</button>
-</form>
-
-<hr/>
-
-<h3>Movimentações</h3>
-
-<table border="1">
-    <thead>
-    <tr>
-        <th>Data/Hora</th>
-        <th>Tipo</th>
-        <th>Qtd</th>
-        <th>Custo unit.</th>
-        <th>Valor total</th>
-        <th>Origem</th>
-        <th>Observação</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="mov : ${movimentos}">
-        <td th:text="${#temporals.format(mov.dataHora, 'dd/MM/yyyy HH:mm')}"></td>
-        <td th:text="${mov.tipo}"></td>
-        <td th:text="${mov.quantidade}"></td>
-        <td th:text="${mov.custoUnitario}"></td>
-        <td th:text="${mov.valorTotal}"></td>
-        <td th:text="${mov.origemTipo + ' #' + mov.origemId}"></td>
-        <td th:text="${mov.observacao}"></td>
-    </tr>
-    <tr th:if="${movimentos == null or #lists.isEmpty(movimentos)}">
-        <td colspan="7">Nenhuma movimentação registrada.</td>
-    </tr>
-    </tbody>
-</table>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

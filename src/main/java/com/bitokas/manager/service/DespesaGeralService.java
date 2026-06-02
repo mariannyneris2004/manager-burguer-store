@@ -8,6 +8,7 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -73,7 +74,7 @@ public class DespesaGeralService {
                 .toList();
     }
 
-    public List<DespesaGeralDTO> listarPorPeriodo(Date inicio, Date fim) {
+    public List<DespesaGeralDTO> listarPorPeriodo(LocalDateTime inicio, LocalDateTime fim) {
         if (inicio == null && fim == null){
             return null;
         }

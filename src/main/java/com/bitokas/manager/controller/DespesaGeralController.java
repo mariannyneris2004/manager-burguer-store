@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Controller
@@ -65,14 +66,14 @@ public class DespesaGeralController {
 
     @GetMapping("/periodo")
     public String listarPorPeriodo(
-            @DateTimeFormat(pattern = "yyyy-MM-dd") Date inicio,
-            @DateTimeFormat(pattern = "yyyy-MM-dd") Date fim,
+            @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDateTime inicio,
+            @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDateTime fim,
             Model model) {
 
         if (inicio != null && fim == null){
-            fim = new Date();
+            fim = LocalDateTime.now();
         } else if (inicio == null && fim != null){
-            inicio = fim;
+            inicio = fim.minusHours(24);
         }
 
         model.addAttribute("despesas", despesaGeralService.listarPorPeriodo(inicio, fim));

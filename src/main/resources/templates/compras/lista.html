@@ -1,43 +1,54 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8"/>
-    <title>Compras</title>
-</head>
+<head th:replace="~{fragments/layout :: head('Compras')}"></head>
 <body>
+<div th:replace="~{fragments/layout :: navbar('compras')}"></div>
 
-<h1>Lista de Compras</h1>
+<main class="container py-4">
 
-<p>
-    <a th:href="@{/compras/novo}">Nova Compra</a>
-    |
-    <a th:href="@{/estoque}">Ver estoque</a>
-</p>
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <div class="page-eyebrow text-primary mb-1">Entradas de estoque</div>
+            <h1 class="h3 mb-1">Compras</h1>
+            <p class="text-muted mb-0">Registros de compra que alimentam o estoque e o custo médio.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-primary" th:href="@{/compras/novo}">Nova compra</a>
+            <a class="btn btn-outline-secondary" th:href="@{/estoque}">Ver estoque</a>
+        </div>
+    </div>
 
-<table border="1">
-    <thead>
-    <tr>
-        <th>ID</th>
-        <th>Data</th>
-        <th>Valor Total</th>
-        <th>Itens</th>
-        <th>Ações</th>
-    </tr>
-    </thead>
+    <div class="card app-card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Data</th>
+                    <th class="text-end">Valor total</th>
+                    <th class="text-end">Itens</th>
+                    <th class="text-end">Ações</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="compra : ${compras}">
+                    <td th:text="${compra.id}"></td>
+                    <td th:text="${compra.dataCompra != null ? #dates.format(compra.dataCompra, 'dd/MM/yyyy') : ''}"></td>
+                    <td class="text-end" th:text="${compra.valorTotal != null ? #numbers.formatDecimal(compra.valorTotal, 2, 2) : '-'}"></td>
+                    <td class="text-end" th:text="${compra.itens != null ? compra.itens.size() : 0}"></td>
+                    <td class="text-end"><a class="btn btn-sm btn-outline-primary" th:href="@{/compras/{id}(id=${compra.id})}">Detalhes</a></td>
+                </tr>
+                <tr th:if="${compras == null or #lists.isEmpty(compras)}">
+                    <td colspan="5" class="text-center text-muted py-4">Nenhuma compra encontrada.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-    <tbody>
-    <tr th:each="compra : ${compras}">
-        <td th:text="${compra.id}"></td>
-        <td th:text="${compra.dataCompra != null ? #dates.format(compra.dataCompra, 'dd/MM/yyyy') : ''}"></td>
-        <td th:text="${compra.valorTotal}"></td>
-        <td th:text="${compra.itens != null ? compra.itens.size() : 0}"></td>
+</main>
 
-        <td>
-            <a th:href="@{/compras/{id}(id=${compra.id})}">Detalhes</a>
-        </td>
-    </tr>
-    </tbody>
-</table>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

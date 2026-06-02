@@ -1,85 +1,106 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8"/>
-    <title>Pedido</title>
-</head>
+<head th:replace="~{fragments/layout :: head('Pedido')}"></head>
 <body>
+<div th:replace="~{fragments/layout :: navbar('pedidos')}"></div>
 
-<h1 th:text="${pedido.id != null} ? 'Editar Pedido' : 'Novo Pedido'"></h1>
+<main class="container py-4">
 
-<form th:action="@{/pedidos/salvar}" th:object="${pedido}" method="post">
-
-    <input type="hidden" th:field="*{id}"/>
-
-    <label>Cliente:</label>
-    <input type="text" th:field="*{nomeCliente}" required/><br/><br/>
-
-    <label>Tipo de Entrega:</label>
-    <select th:field="*{tipoEntrega}">
-        <option th:each="t : ${tiposEntrega}"
-                th:value="${t}"
-                th:text="${t}">
-        </option>
-    </select>
-    <br/><br/>
-
-    <label>Valor da Entrega:</label>
-    <input type="number" th:field="*{valorEntrega}" step="0.01"/><br/><br/>
-
-    <h3>Produtos</h3>
-    <div th:each="p, i : ${produtosDisponiveis}">
-        <input type="hidden" th:field="*{produtos[__${i.index}__].id}" />
-        <input type="hidden" th:field="*{produtos[__${i.index}__].pedidoId}" />
-        <input type="hidden" th:field="*{produtos[__${i.index}__].produtoId}" />
-
-        <input type="checkbox" th:field="*{produtos[__${i.index}__].selecionado}" />
-        <span th:text="${p.nome}"></span>
-
-        <input type="number"
-               min="0"
-               th:field="*{produtos[__${i.index}__].quantidade}"
-               placeholder="Qtd"/>
-        <small th:if="${p.custoUnitario != null}">
-            | custo atual: <span th:text="${p.custoUnitario}"></span>
-        </small>
-        <br/>
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <div class="page-eyebrow text-primary mb-1">Cadastro</div>
+            <h1 class="h3 mb-1" th:text="${pedido.id != null} ? 'Editar Pedido' : 'Novo Pedido'"></h1>
+            <p class="text-muted mb-0">Monte produtos e adicionais, calcule o total e registre o pagamento.</p>
+        </div>
+        <a class="btn btn-outline-secondary" th:href="@{/pedidos}">Voltar</a>
     </div>
 
-    <br/>
+    <form th:action="@{/pedidos/salvar}" th:object="${pedido}" method="post">
+        <input type="hidden" th:field="*{id}"/>
 
-    <h3>Adicionais</h3>
-    <div th:each="a, j : ${adicionaisDisponiveis}">
-        <input type="hidden" th:field="*{adicionais[__${j.index}__].id}" />
-        <input type="hidden" th:field="*{adicionais[__${j.index}__].pedidoId}" />
-        <input type="hidden" th:field="*{adicionais[__${j.index}__].adicionalId}" />
+        <div class="card app-card mb-4">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-5"><label class="form-label">Cliente</label><input type="text" class="form-control" th:field="*{nomeCliente}" required/></div>
+                    <div class="col-md-3"><label class="form-label">Tipo de entrega</label><select class="form-select" th:field="*{tipoEntrega}"><option th:each="t : ${tiposEntrega}" th:value="${t}" th:text="${t}"></option></select></div>
+                    <div class="col-md-2"><label class="form-label">Valor da entrega</label><input type="number" class="form-control" th:field="*{valorEntrega}" step="0.01"/></div>
+                    <div class="col-md-2"><label class="form-label">Valor pago</label><input type="number" class="form-control" th:field="*{valorPago}" step="0.01"/></div>
+                </div>
+            </div>
+        </div>
 
-        <input type="checkbox" th:field="*{adicionais[__${j.index}__].selecionado}" />
-        <span th:text="${a.nome}"></span>
+        <div class="card app-card mb-4">
+            <div class="card-header bg-white"><h2 class="h5 mb-0">Produtos</h2></div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Selecionar</th>
+                        <th>Produto</th>
+                        <th style="width: 160px;" class="text-end">Quantidade</th>
+                        <th class="text-end">Custo atual</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="p, i : ${produtosDisponiveis}">
+                        <td>
+                            <input type="hidden" th:field="*{produtos[__${i.index}__].id}" />
+                            <input type="hidden" th:field="*{produtos[__${i.index}__].pedidoId}" />
+                            <input type="hidden" th:field="*{produtos[__${i.index}__].produtoId}" />
+                            <div class="form-check"><input class="form-check-input" type="checkbox" th:field="*{produtos[__${i.index}__].selecionado}" /></div>
+                        </td>
+                        <td class="fw-semibold" th:text="${p.nome}"></td>
+                        <td><input type="number" class="form-control text-end" min="0" th:field="*{produtos[__${i.index}__].quantidade}" placeholder="Qtd"/></td>
+                        <td class="text-end"><small class="text-muted" th:if="${p.custoUnitario != null}">R$ <span th:text="${#numbers.formatDecimal(p.custoUnitario, 2, 2)}"></span></small></td>
+                    </tr>
+                    <tr th:if="${produtosDisponiveis == null or #lists.isEmpty(produtosDisponiveis)}"><td colspan="4" class="text-center text-muted py-3">Nenhum produto disponível.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-        <input type="number"
-               min="0"
-               th:field="*{adicionais[__${j.index}__].quantidade}"
-               placeholder="Qtd"/>
-        <br/>
-    </div>
+        <div class="card app-card mb-4">
+            <div class="card-header bg-white"><h2 class="h5 mb-0">Adicionais</h2></div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Selecionar</th>
+                        <th>Adicional</th>
+                        <th style="width: 160px;" class="text-end">Quantidade</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="a, j : ${adicionaisDisponiveis}">
+                        <td>
+                            <input type="hidden" th:field="*{adicionais[__${j.index}__].id}" />
+                            <input type="hidden" th:field="*{adicionais[__${j.index}__].pedidoId}" />
+                            <input type="hidden" th:field="*{adicionais[__${j.index}__].adicionalId}" />
+                            <div class="form-check"><input class="form-check-input" type="checkbox" th:field="*{adicionais[__${j.index}__].selecionado}" /></div>
+                        </td>
+                        <td class="fw-semibold" th:text="${a.nome}"></td>
+                        <td><input type="number" class="form-control text-end" min="0" th:field="*{adicionais[__${j.index}__].quantidade}" placeholder="Qtd"/></td>
+                    </tr>
+                    <tr th:if="${adicionaisDisponiveis == null or #lists.isEmpty(adicionaisDisponiveis)}"><td colspan="3" class="text-center text-muted py-3">Nenhum adicional disponível.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-    <br/>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Salvar</button>
+            <button type="submit" class="btn btn-outline-primary" formaction="/pedidos/calcular-total">Calcular total</button>
+            <a class="btn btn-outline-secondary" th:href="@{/pedidos}">Cancelar</a>
+        </div>
 
-    <label>Valor Pago:</label>
-    <input type="number" th:field="*{valorPago}" step="0.01"/><br/><br/>
+        <div th:if="${totalCalculado != null}" class="alert alert-success mt-4">
+            <strong>Total calculado:</strong> <span th:text="${#numbers.formatDecimal(totalCalculado, 2, 2)}"></span>
+        </div>
+    </form>
 
-    <div th:if="${totalCalculado != null}">
-        <strong>Total calculado:</strong> <span th:text="${totalCalculado}"></span>
-    </div>
+</main>
 
-    <br/>
-
-    <button type="submit">Salvar</button>
-    <button type="submit" formaction="/pedidos/calcular-total">Calcular total</button>
-    <a th:href="@{/pedidos}">Cancelar</a>
-
-</form>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>
