@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -21,6 +22,5 @@ public class PedidoDTO {
     private Double valorPago;
     private Double custoTotal;
     private Double lucroBruto;
-    private List<PedidoProdutoDTO> produtos;
-    private List<PedidoAdicionalDTO> adicionais;
+    private List<PedidoItemDTO> itens = new ArrayList<>();
 }

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: head('Pedido')}"></head>
+<head th:replace="~{fragments/layout :: head('Pedido')}" ></head>
 <body>
 <div th:replace="~{fragments/layout :: navbar('pedidos')}"></div>
 
@@ -8,87 +8,204 @@
 
     <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
         <div>
-            <div class="page-eyebrow text-primary mb-1">Cadastro</div>
-            <h1 class="h3 mb-1" th:text="${pedido.id != null} ? 'Editar Pedido' : 'Novo Pedido'"></h1>
-            <p class="text-muted mb-0">Monte produtos e adicionais, calcule o total e registre o pagamento.</p>
+            <div class="page-eyebrow text-primary mb-1">Vendas</div>
+            <h1 class="h3 mb-1" th:text="${pedido.id != null ? 'Editar pedido' : 'Novo pedido'}"></h1>
+            <p class="text-muted mb-0">Monte o pedido por item, com adicionais e retiradas por produto.</p>
         </div>
         <a class="btn btn-outline-secondary" th:href="@{/pedidos}">Voltar</a>
     </div>
 
-    <form th:action="@{/pedidos/salvar}" th:object="${pedido}" method="post">
+    <form th:action="@{/pedidos/salvar}" th:object="${pedido}" method="post" id="pedidoForm">
         <input type="hidden" th:field="*{id}"/>
 
         <div class="card app-card mb-4">
             <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-5"><label class="form-label">Cliente</label><input type="text" class="form-control" th:field="*{nomeCliente}" required/></div>
-                    <div class="col-md-3"><label class="form-label">Tipo de entrega</label><select class="form-select" th:field="*{tipoEntrega}"><option th:each="t : ${tiposEntrega}" th:value="${t}" th:text="${t}"></option></select></div>
-                    <div class="col-md-2"><label class="form-label">Valor da entrega</label><input type="number" class="form-control" th:field="*{valorEntrega}" step="0.01"/></div>
-                    <div class="col-md-2"><label class="form-label">Valor pago</label><input type="number" class="form-control" th:field="*{valorPago}" step="0.01"/></div>
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-5">
+                        <label class="form-label">Cliente</label>
+                        <input type="text" class="form-control" th:field="*{nomeCliente}" required/>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Tipo de entrega</label>
+                        <select class="form-select" th:field="*{tipoEntrega}" id="tipoEntrega">
+                            <option th:each="t : ${tiposEntrega}" th:value="${t}" th:text="${t}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Valor da entrega</label>
+                        <input type="number" class="form-control" th:field="*{valorEntrega}" step="0.01" min="0" id="valorEntrega"/>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Valor pago</label>
+                        <input type="number" class="form-control" th:field="*{valorPago}" step="0.01" min="0"/>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="card app-card mb-4">
-            <div class="card-header bg-white"><h2 class="h5 mb-0">Produtos</h2></div>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                    <tr>
-                        <th>Selecionar</th>
-                        <th>Produto</th>
-                        <th style="width: 160px;" class="text-end">Quantidade</th>
-                        <th class="text-end">Custo atual</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="p, i : ${produtosDisponiveis}">
-                        <td>
-                            <input type="hidden" th:field="*{produtos[__${i.index}__].id}" />
-                            <input type="hidden" th:field="*{produtos[__${i.index}__].pedidoId}" />
-                            <input type="hidden" th:field="*{produtos[__${i.index}__].produtoId}" />
-                            <div class="form-check"><input class="form-check-input" type="checkbox" th:field="*{produtos[__${i.index}__].selecionado}" /></div>
-                        </td>
-                        <td class="fw-semibold" th:text="${p.nome}"></td>
-                        <td><input type="number" class="form-control text-end" min="0" th:field="*{produtos[__${i.index}__].quantidade}" placeholder="Qtd"/></td>
-                        <td class="text-end"><small class="text-muted" th:if="${p.custoUnitario != null}">R$ <span th:text="${#numbers.formatDecimal(p.custoUnitario, 2, 2)}"></span></small></td>
-                    </tr>
-                    <tr th:if="${produtosDisponiveis == null or #lists.isEmpty(produtosDisponiveis)}"><td colspan="4" class="text-center text-muted py-3">Nenhum produto disponível.</td></tr>
-                    </tbody>
-                </table>
+            <div class="card-header bg-white">
+                <h2 class="h5 mb-0">Adicionar item</h2>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-5">
+                        <label class="form-label">Produto</label>
+                        <select class="form-select" id="produtoSelect">
+                            <option value="">Selecione...</option>
+                            <option th:each="p : ${produtosDisponiveis}" th:value="${p.id}" th:text="${p.nome}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Quantidade</label>
+                        <input type="number" class="form-control" id="quantidadeProduto" min="1" step="1" value="1"/>
+                    </div>
+                    <div class="col-md-5 d-flex align-items-center gap-3">
+                        <div class="form-check" id="temAdicionaisContainer" style="display:none;">
+                            <input class="form-check-input" type="checkbox" id="temAdicionais">
+                            <label class="form-check-label" for="temAdicionais">Tem adicionais?</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="temRetirada">
+                            <label class="form-check-label" for="temRetirada">Tem retirada?</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="adicionaisArea" class="mt-4" style="display:none;">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h3 class="h6 mb-0">Adicionais permitidos</h3>
+                        <small class="text-muted">Marque e informe a quantidade do adicional.</small>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead class="table-light">
+                            <tr>
+                                <th style="width:80px;">Sel.</th>
+                                <th>Adicional</th>
+                                <th class="text-end" style="width:120px;">Valor base</th>
+                                <th class="text-end" style="width:140px;">Qtd.</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tbodyAdicionais"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="retiradaArea" class="mt-4" style="display:none;">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h3 class="h6 mb-0">Ingredientes do produto</h3>
+                        <small class="text-muted">Marque o que será retirado do pedido.</small>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead class="table-light">
+                            <tr>
+                                <th style="width:80px;">Sel.</th>
+                                <th>Ingrediente</th>
+                                <th class="text-end" style="width:140px;">Qtd. na receita</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tbodyRetiradas"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <button type="button" class="btn btn-primary" id="btnAdicionarItem">Adicionar item ao pedido</button>
+                </div>
             </div>
         </div>
 
         <div class="card app-card mb-4">
-            <div class="card-header bg-white"><h2 class="h5 mb-0">Adicionais</h2></div>
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h2 class="h5 mb-0">Itens do pedido</h2>
+                <small class="text-muted">Os itens podem ser removidos e adicionados novamente com outra configuração.</small>
+            </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                     <tr>
-                        <th>Selecionar</th>
-                        <th>Adicional</th>
-                        <th style="width: 160px;" class="text-end">Quantidade</th>
+                        <th>Produto</th>
+                        <th class="text-end">Qtd.</th>
+                        <th>Adicionais</th>
+                        <th>Retiradas</th>
+                        <th class="text-end">Total</th>
+                        <th class="text-end">Custo</th>
+                        <th class="text-end">Lucro</th>
+                        <th class="text-end">Ações</th>
                     </tr>
                     </thead>
-                    <tbody>
-                    <tr th:each="a, j : ${adicionaisDisponiveis}">
+                    <tbody id="tbodyItens">
+                    <tr th:each="item, i : *{itens}">
                         <td>
-                            <input type="hidden" th:field="*{adicionais[__${j.index}__].id}" />
-                            <input type="hidden" th:field="*{adicionais[__${j.index}__].pedidoId}" />
-                            <input type="hidden" th:field="*{adicionais[__${j.index}__].adicionalId}" />
-                            <div class="form-check"><input class="form-check-input" type="checkbox" th:field="*{adicionais[__${j.index}__].selecionado}" /></div>
+                            <input type="hidden" th:field="*{itens[__${i.index}__].id}"/>
+                            <input type="hidden" th:field="*{itens[__${i.index}__].pedidoId}"/>
+                            <input type="hidden" th:field="*{itens[__${i.index}__].produtoId}"/>
+                            <input type="hidden" th:field="*{itens[__${i.index}__].produtoNome}"/>
+                            <input type="hidden" th:field="*{itens[__${i.index}__].produtoValorVenda}"/>
+                            <input type="hidden" th:field="*{itens[__${i.index}__].custoBaseUnitario}"/>
+                            <input type="hidden" th:field="*{itens[__${i.index}__].custoBaseTotal}"/>
+                            <input type="hidden" th:field="*{itens[__${i.index}__].valorAdicionaisTotal}"/>
+                            <input type="hidden" th:field="*{itens[__${i.index}__].custoAdicionaisTotal}"/>
+                            <input type="hidden" th:field="*{itens[__${i.index}__].custoRetiradasTotal}"/>
+                            <input type="hidden" th:field="*{itens[__${i.index}__].valorTotalItem}"/>
+                            <input type="hidden" th:field="*{itens[__${i.index}__].custoTotalItem}"/>
+                            <input type="hidden" th:field="*{itens[__${i.index}__].lucroItem}"/>
+                            <div class="fw-semibold" th:text="${item.produtoNome}"></div>
                         </td>
-                        <td class="fw-semibold" th:text="${a.nome}"></td>
-                        <td><input type="number" class="form-control text-end" min="0" th:field="*{adicionais[__${j.index}__].quantidade}" placeholder="Qtd"/></td>
+                        <td class="text-end">
+                            <input type="hidden" th:field="*{itens[__${i.index}__].quantidade}"/>
+                            <span th:text="${item.quantidade}"></span>
+                        </td>
+                        <td>
+                            <div th:if="${item.adicionais == null or #lists.isEmpty(item.adicionais)}" class="text-muted small">Nenhum</div>
+                            <ul th:if="${item.adicionais != null and !#lists.isEmpty(item.adicionais)}" class="mb-0 ps-3 small">
+                                <li th:each="adicional, j : *{itens[__${i.index}__].adicionais}">
+                                    <input type="hidden" th:field="*{itens[__${i.index}__].adicionais[__${j.index}__].id}"/>
+                                    <input type="hidden" th:field="*{itens[__${i.index}__].adicionais[__${j.index}__].pedidoItemId}"/>
+                                    <input type="hidden" th:field="*{itens[__${i.index}__].adicionais[__${j.index}__].adicionalId}"/>
+                                    <input type="hidden" th:field="*{itens[__${i.index}__].adicionais[__${j.index}__].adicionalNome}"/>
+                                    <input type="hidden" th:field="*{itens[__${i.index}__].adicionais[__${j.index}__].adicionalValorBase}"/>
+                                    <input type="hidden" th:field="*{itens[__${i.index}__].adicionais[__${j.index}__].quantidade}"/>
+                                    <input type="hidden" th:field="*{itens[__${i.index}__].adicionais[__${j.index}__].custoUnitario}"/>
+                                    <input type="hidden" th:field="*{itens[__${i.index}__].adicionais[__${j.index}__].custoTotal}"/>
+                                    <span th:text="${adicional.adicionalNome + ' x' + adicional.quantidade}"></span>
+                                </li>
+                            </ul>
+                        </td>
+                        <td>
+                            <div th:if="${item.retiradas == null or #lists.isEmpty(item.retiradas)}" class="text-muted small">Nenhuma</div>
+                            <ul th:if="${item.retiradas != null and !#lists.isEmpty(item.retiradas)}" class="mb-0 ps-3 small">
+                                <li th:each="retirada, k : *{itens[__${i.index}__].retiradas}">
+                                    <input type="hidden" th:field="*{itens[__${i.index}__].retiradas[__${k.index}__].id}"/>
+                                    <input type="hidden" th:field="*{itens[__${i.index}__].retiradas[__${k.index}__].pedidoItemId}"/>
+                                    <input type="hidden" th:field="*{itens[__${i.index}__].retiradas[__${k.index}__].ingredienteId}"/>
+                                    <input type="hidden" th:field="*{itens[__${i.index}__].retiradas[__${k.index}__].ingredienteNome}"/>
+                                    <input type="hidden" th:field="*{itens[__${i.index}__].retiradas[__${k.index}__].quantidade}"/>
+                                    <input type="hidden" th:field="*{itens[__${i.index}__].retiradas[__${k.index}__].custoUnitario}"/>
+                                    <input type="hidden" th:field="*{itens[__${i.index}__].retiradas[__${k.index}__].custoTotal}"/>
+                                    <span th:text="${retirada.ingredienteNome + ' x' + retirada.quantidade}"></span>
+                                </li>
+                            </ul>
+                        </td>
+                        <td class="text-end" th:text="${item.valorTotalItem != null ? #numbers.formatDecimal(item.valorTotalItem, 2, 2) : '-'}"></td>
+                        <td class="text-end" th:text="${item.custoTotalItem != null ? #numbers.formatDecimal(item.custoTotalItem, 2, 2) : '-'}"></td>
+                        <td class="text-end" th:text="${item.lucroItem != null ? #numbers.formatDecimal(item.lucroItem, 2, 2) : '-'}"></td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removerLinha(this)">Remover</button>
+                        </td>
                     </tr>
-                    <tr th:if="${adicionaisDisponiveis == null or #lists.isEmpty(adicionaisDisponiveis)}"><td colspan="3" class="text-center text-muted py-3">Nenhum adicional disponível.</td></tr>
+                    <tr th:if="${pedido.itens == null or #lists.isEmpty(pedido.itens)}">
+                        <td colspan="8" class="text-center text-muted py-4">Nenhum item adicionado.</td>
+                    </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-primary">Salvar</button>
+        <div class="d-flex gap-2 flex-wrap">
+            <button type="submit" class="btn btn-primary">Salvar pedido</button>
             <button type="submit" class="btn btn-outline-primary" formaction="/pedidos/calcular-total">Calcular total</button>
             <a class="btn btn-outline-secondary" th:href="@{/pedidos}">Cancelar</a>
         </div>
@@ -99,6 +216,330 @@
     </form>
 
 </main>
+
+<script th:inline="javascript">
+    const produtosCatalogo = /*[[${produtosDisponiveis}]]*/ [];
+    const adicionaisCatalogo = /*[[${adicionaisDisponiveis}]]*/ [];
+    const ingredientesCatalogo = /*[[${ingredientesDisponiveis}]]*/ [];
+
+    const mapaProdutos = new Map(produtosCatalogo.map(p => [String(p.id), p]));
+    const mapaAdicionais = new Map(adicionaisCatalogo.map(a => [String(a.id), a]));
+    const mapaIngredientes = new Map(ingredientesCatalogo.map(i => [String(i.id), i]));
+
+    let itemIndex = /*[[${pedido.itens != null ? pedido.itens.size() : 0}]]*/ 0;
+
+    const produtoSelect = document.getElementById('produtoSelect');
+    const quantidadeProdutoInput = document.getElementById('quantidadeProduto');
+    const temAdicionaisCheckbox = document.getElementById('temAdicionais');
+    const temAdicionaisContainer = document.getElementById('temAdicionaisContainer');
+    const adicionaisArea = document.getElementById('adicionaisArea');
+    const tbodyAdicionais = document.getElementById('tbodyAdicionais');
+    const temRetiradaCheckbox = document.getElementById('temRetirada');
+    const retiradaArea = document.getElementById('retiradaArea');
+    const tbodyRetiradas = document.getElementById('tbodyRetiradas');
+    const btnAdicionarItem = document.getElementById('btnAdicionarItem');
+
+    function formato(valor) {
+        return Number(valor || 0).toFixed(2);
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function produtoAtual() {
+        const id = produtoSelect.value;
+        return id ? mapaProdutos.get(String(id)) : null;
+    }
+
+    function atualizarPainelProduto() {
+        const produto = produtoAtual();
+
+        temAdicionaisCheckbox.checked = false;
+        temRetiradaCheckbox.checked = false;
+        adicionaisArea.style.display = 'none';
+        retiradaArea.style.display = 'none';
+        tbodyAdicionais.innerHTML = '';
+        tbodyRetiradas.innerHTML = '';
+
+        if (!produto) {
+            temAdicionaisContainer.style.display = 'none';
+            btnAdicionarItem.disabled = true;
+            return;
+        }
+
+        btnAdicionarItem.disabled = false;
+
+        const adicionaisPermitidos = Array.isArray(produto.adicionaisPermitidos) ? produto.adicionaisPermitidos : [];
+        if (adicionaisPermitidos.length > 0) {
+            temAdicionaisContainer.style.display = 'inline-flex';
+            renderAdicionais(produto);
+        } else {
+            temAdicionaisContainer.style.display = 'none';
+        }
+
+        renderRetiradas(produto);
+    }
+
+    function renderAdicionais(produto) {
+        const adicionaisPermitidos = Array.isArray(produto.adicionaisPermitidos) ? produto.adicionaisPermitidos : [];
+        const linhas = adicionaisPermitidos.map(ap => {
+            const adicional = mapaAdicionais.get(String(ap.adicionalId));
+            if (!adicional) return '';
+            return `
+                <tr>
+                    <td><input class="form-check-input adicional-check" type="checkbox" data-adicional-id="${adicional.id}"></td>
+                    <td>
+                        <div class="fw-semibold">${escapeHtml(adicional.nome)}</div>
+                    </td>
+                    <td class="text-end">R$ ${formato(adicional.valorBase)}</td>
+                    <td class="text-end"><input type="number" min="0" step="1" value="0" class="form-control form-control-sm text-end adicional-qtd" data-adicional-id="${adicional.id}"></td>
+                </tr>`;
+        }).join('');
+        tbodyAdicionais.innerHTML = linhas || '<tr><td colspan="4" class="text-center text-muted py-3">Nenhum adicional disponível.</td></tr>';
+    }
+
+    function renderRetiradas(produto) {
+        const ingredientes = Array.isArray(produto.ingredientes) ? produto.ingredientes : [];
+        const linhas = ingredientes.map(pi => {
+            const ingrediente = mapaIngredientes.get(String(pi.ingredienteId));
+            if (!ingrediente) return '';
+            return `
+                <tr>
+                    <td><input class="form-check-input retirada-check" type="checkbox" data-ingrediente-id="${ingrediente.id}"></td>
+                    <td>
+                        <div class="fw-semibold">${escapeHtml(ingrediente.nome)}</div>
+                    </td>
+                    <td class="text-end">${pi.quantidade ?? 0}</td>
+                </tr>`;
+        }).join('');
+        tbodyRetiradas.innerHTML = linhas || '<tr><td colspan="3" class="text-center text-muted py-3">Nenhum ingrediente disponível.</td></tr>';
+    }
+
+    temAdicionaisCheckbox.addEventListener('change', function () {
+        adicionaisArea.style.display = this.checked ? 'block' : 'none';
+        if (!this.checked) {
+            tbodyAdicionais.querySelectorAll('.adicional-check').forEach(cb => cb.checked = false);
+            tbodyAdicionais.querySelectorAll('.adicional-qtd').forEach(inp => inp.value = 0);
+        }
+    });
+
+    temRetiradaCheckbox.addEventListener('change', function () {
+        retiradaArea.style.display = this.checked ? 'block' : 'none';
+        if (!this.checked) {
+            tbodyRetiradas.querySelectorAll('.retirada-check').forEach(cb => cb.checked = false);
+        }
+    });
+
+    produtoSelect.addEventListener('change', atualizarPainelProduto);
+    btnAdicionarItem.addEventListener('click', adicionarItem);
+
+    function adicionarItem() {
+        const produto = produtoAtual();
+        if (!produto) {
+            alert('Selecione um produto.');
+            return;
+        }
+
+        const quantidade = parseInt(quantidadeProdutoInput.value, 10);
+        if (!quantidade || quantidade <= 0) {
+            alert('Informe a quantidade do produto.');
+            return;
+        }
+
+        const adicionaisSelecionados = [];
+        if (temAdicionaisCheckbox.checked) {
+            tbodyAdicionais.querySelectorAll('tr').forEach(tr => {
+                const check = tr.querySelector('.adicional-check');
+                const qtdInput = tr.querySelector('.adicional-qtd');
+                if (!check || !check.checked) return;
+                const adicional = mapaAdicionais.get(String(check.dataset.adicionalId));
+                const qtd = parseInt(qtdInput.value, 10);
+                if (!adicional || !qtd || qtd <= 0) return;
+                adicionaisSelecionados.push({ adicional, quantidade: qtd });
+            });
+        }
+
+        const retiradasSelecionadas = [];
+        if (temRetiradaCheckbox.checked) {
+            tbodyRetiradas.querySelectorAll('tr').forEach(tr => {
+                const check = tr.querySelector('.retirada-check');
+                if (!check || !check.checked) return;
+                const ingrediente = mapaIngredientes.get(String(check.dataset.ingredienteId));
+                if (!ingrediente) return;
+                retiradasSelecionadas.push({ ingrediente });
+            });
+        }
+
+        const calculo = calcularItem(produto, quantidade, adicionaisSelecionados, retiradasSelecionadas);
+        const tr = document.createElement('tr');
+        tr.innerHTML = montarLinhaHtml(calculo, itemIndex);
+        document.getElementById('tbodyItens').appendChild(tr);
+        itemIndex++;
+
+        limparPainelDeNovoItem();
+    }
+
+    function calcularItem(produto, quantidade, adicionaisSelecionados, retiradasSelecionadas) {
+        const retiradasIds = new Set(retiradasSelecionadas.map(r => String(r.ingrediente.id)));
+
+        let custoBaseUnitario = 0;
+        let custoRetiradasUnitario = 0;
+
+        (produto.ingredientes || []).forEach(pi => {
+            const ingrediente = mapaIngredientes.get(String(pi.ingredienteId));
+            const qtd = Number(pi.quantidade || 0);
+            const custoMedio = Number(ingrediente?.custoMedioAtual || 0);
+            const custo = qtd * custoMedio;
+            if (retiradasIds.has(String(pi.ingredienteId))) {
+                custoRetiradasUnitario += custo;
+            } else {
+                custoBaseUnitario += custo;
+            }
+        });
+
+        let valorAdicionaisUnitario = 0;
+        let custoAdicionaisUnitario = 0;
+        const adicionaisSnapshot = [];
+
+        adicionaisSelecionados.forEach(sel => {
+            let custoUnitarioAdicional = 0;
+            (sel.adicional.ingredientes || []).forEach(ai => {
+                const ingrediente = mapaIngredientes.get(String(ai.ingredienteId));
+                const qtd = Number(ai.quantidade || 0);
+                const custoMedio = Number(ingrediente?.custoMedioAtual || 0);
+                custoUnitarioAdicional += qtd * custoMedio;
+            });
+            valorAdicionaisUnitario += Number(sel.adicional.valorBase || 0) * sel.quantidade;
+            custoAdicionaisUnitario += custoUnitarioAdicional * sel.quantidade;
+            adicionaisSnapshot.push({
+                adicionalId: sel.adicional.id,
+                adicionalNome: sel.adicional.nome,
+                adicionalValorBase: sel.adicional.valorBase,
+                quantidade: sel.quantidade,
+                custoUnitario: custoUnitarioAdicional,
+                custoTotal: custoUnitarioAdicional * sel.quantidade * quantidade
+            });
+        });
+
+        const retiradasSnapshot = [];
+        retiradasSelecionadas.forEach(sel => {
+            const pi = (produto.ingredientes || []).find(x => String(x.ingredienteId) === String(sel.ingrediente.id));
+            const qtdReceita = Number(pi?.quantidade || 0) * quantidade;
+            const custoMedio = Number(sel.ingrediente.custoMedioAtual || 0);
+            retiradasSnapshot.push({
+                ingredienteId: sel.ingrediente.id,
+                ingredienteNome: sel.ingrediente.nome,
+                quantidade: qtdReceita,
+                custoUnitario: custoMedio,
+                custoTotal: qtdReceita * custoMedio
+            });
+        });
+
+        const valorTotalItem = (Number(produto.valorVenda || 0) + valorAdicionaisUnitario) * quantidade;
+        const custoTotalItem = (custoBaseUnitario + custoAdicionaisUnitario) * quantidade;
+        const lucroItem = valorTotalItem - custoTotalItem;
+
+        return {
+            produto,
+            quantidade,
+            custoBaseUnitario,
+            custoBaseTotal: custoBaseUnitario * quantidade,
+            valorAdicionaisTotal: valorAdicionaisUnitario * quantidade,
+            custoAdicionaisTotal: custoAdicionaisUnitario * quantidade,
+            custoRetiradasTotal: custoRetiradasUnitario * quantidade,
+            valorTotalItem,
+            custoTotalItem,
+            lucroItem,
+            adicionaisSnapshot,
+            retiradasSnapshot
+        };
+    }
+
+    function montarLinhaHtml(calculo, indice) {
+        const adicionaisTexto = calculo.adicionaisSnapshot.length
+            ? calculo.adicionaisSnapshot.map(a => `${escapeHtml(a.adicionalNome)} x${a.quantidade}`).join('<br>')
+            : 'Nenhum';
+        const retiradasTexto = calculo.retiradasSnapshot.length
+            ? calculo.retiradasSnapshot.map(r => `${escapeHtml(r.ingredienteNome)} x${r.quantidade}`).join('<br>')
+            : 'Nenhuma';
+
+        let hiddenExtras = '';
+        calculo.adicionaisSnapshot.forEach((adicional, idx) => {
+            hiddenExtras += `
+                <input type="hidden" name="itens[${indice}].adicionais[${idx}].adicionalId" value="${adicional.adicionalId}">
+                <input type="hidden" name="itens[${indice}].adicionais[${idx}].adicionalNome" value="${escapeHtml(adicional.adicionalNome)}">
+                <input type="hidden" name="itens[${indice}].adicionais[${idx}].adicionalValorBase" value="${adicional.adicionalValorBase || 0}">
+                <input type="hidden" name="itens[${indice}].adicionais[${idx}].quantidade" value="${adicional.quantidade}">
+                <input type="hidden" name="itens[${indice}].adicionais[${idx}].custoUnitario" value="${adicional.custoUnitario}">
+                <input type="hidden" name="itens[${indice}].adicionais[${idx}].custoTotal" value="${adicional.custoTotal}">
+            `;
+        });
+
+        calculo.retiradasSnapshot.forEach((retirada, idx) => {
+            hiddenExtras += `
+                <input type="hidden" name="itens[${indice}].retiradas[${idx}].ingredienteId" value="${retirada.ingredienteId}">
+                <input type="hidden" name="itens[${indice}].retiradas[${idx}].ingredienteNome" value="${escapeHtml(retirada.ingredienteNome)}">
+                <input type="hidden" name="itens[${indice}].retiradas[${idx}].quantidade" value="${retirada.quantidade}">
+                <input type="hidden" name="itens[${indice}].retiradas[${idx}].custoUnitario" value="${retirada.custoUnitario}">
+                <input type="hidden" name="itens[${indice}].retiradas[${idx}].custoTotal" value="${retirada.custoTotal}">
+            `;
+        });
+
+        return `
+            <td>
+                <input type="hidden" name="itens[${indice}].produtoId" value="${calculo.produto.id}">
+                <input type="hidden" name="itens[${indice}].produtoNome" value="${escapeHtml(calculo.produto.nome)}">
+                <input type="hidden" name="itens[${indice}].produtoValorVenda" value="${calculo.produto.valorVenda || 0}">
+                <input type="hidden" name="itens[${indice}].quantidade" value="${calculo.quantidade}">
+                <input type="hidden" name="itens[${indice}].custoBaseUnitario" value="${calculo.custoBaseUnitario}">
+                <input type="hidden" name="itens[${indice}].custoBaseTotal" value="${calculo.custoBaseTotal}">
+                <input type="hidden" name="itens[${indice}].valorAdicionaisTotal" value="${calculo.valorAdicionaisTotal}">
+                <input type="hidden" name="itens[${indice}].custoAdicionaisTotal" value="${calculo.custoAdicionaisTotal}">
+                <input type="hidden" name="itens[${indice}].custoRetiradasTotal" value="${calculo.custoRetiradasTotal}">
+                <input type="hidden" name="itens[${indice}].valorTotalItem" value="${calculo.valorTotalItem}">
+                <input type="hidden" name="itens[${indice}].custoTotalItem" value="${calculo.custoTotalItem}">
+                <input type="hidden" name="itens[${indice}].lucroItem" value="${calculo.lucroItem}">
+                ${hiddenExtras}
+                <div class="fw-semibold">${escapeHtml(calculo.produto.nome)}</div>
+            </td>
+            <td class="text-end"><span>${calculo.quantidade}</span></td>
+            <td>${adicionaisTexto}</td>
+            <td>${retiradasTexto}</td>
+            <td class="text-end">R$ ${formato(calculo.valorTotalItem)}</td>
+            <td class="text-end">R$ ${formato(calculo.custoTotalItem)}</td>
+            <td class="text-end">R$ ${formato(calculo.lucroItem)}</td>
+            <td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger" onclick="removerLinha(this)">Remover</button></td>
+        `;
+    }
+
+    function limparPainelDeNovoItem() {
+        produtoSelect.value = '';
+        quantidadeProdutoInput.value = 1;
+        temAdicionaisCheckbox.checked = false;
+        temRetiradaCheckbox.checked = false;
+        adicionaisArea.style.display = 'none';
+        retiradaArea.style.display = 'none';
+        temAdicionaisContainer.style.display = 'none';
+        tbodyAdicionais.innerHTML = '';
+        tbodyRetiradas.innerHTML = '';
+        btnAdicionarItem.disabled = true;
+    }
+
+    function removerLinha(botao) {
+        botao.closest('tr').remove();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        btnAdicionarItem.disabled = true;
+        atualizarPainelProduto();
+    });
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 

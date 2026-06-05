@@ -16,7 +16,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -98,9 +101,54 @@ public class EstoqueService {
         return valorNovo;
     }
 
+    public void devolverIngredienteDoPedido(Long ingredienteId,
+                                           Double quantidade,
+                                           Long pedidoId,
+                                           String observacao) {
+        registrarEntradaEstorno(ingredienteId, n(quantidade), pedidoId, observacao);
+    }
+
+    public double baixarIngredientesDoPedidoPersonalizado(Long pedidoId,
+                                                          Map<Long, Double> consumos,
+                                                          String observacao) {
+        if (consumos == null || consumos.isEmpty()) {
+            return 0d;
+        }
+        double custoTotal = 0d;
+        for (Map.Entry<Long, Double> entry : consumos.entrySet()) {
+            custoTotal += registrarSaidaPedido(entry.getKey(), n(entry.getValue()), pedidoId, observacao);
+        }
+        return custoTotal;
+    }
+
+    public void devolverMovimentosDoPedido(Long pedidoId) {
+        List<MovimentoEstoque> movimentos = entityManager.createQuery(
+                        "select m from MovimentoEstoque m where m.origemTipo = 'PEDIDO' and m.origemId = :pedidoId and m.tipo = :tipo",
+                        MovimentoEstoque.class)
+                .setParameter("pedidoId", pedidoId)
+                .setParameter("tipo", TipoMovimentoEstoque.SAIDA_PEDIDO)
+                .getResultList();
+
+        for (MovimentoEstoque movimento : movimentos) {
+            registrarEntradaEstorno(
+                    movimento.getIngredienteId(),
+                    movimento.getQuantidade(),
+                    pedidoId,
+                    "Estorno do pedido " + pedidoId
+            );
+        }
+    }
+
     public double baixarIngredientesDoProduto(Long produtoId,
                                               Integer quantidadeProduto,
                                               Long pedidoId) {
+        return baixarIngredientesDoProdutoPersonalizado(produtoId, quantidadeProduto, List.of(), pedidoId);
+    }
+
+    public double baixarIngredientesDoProdutoPersonalizado(Long produtoId,
+                                                          Integer quantidadeProduto,
+                                                          Collection<Long> ingredientesRetirados,
+                                                          Long pedidoId) {
         List<ProdutoIngrediente> itens = entityManager.createQuery(
                         "select pi from ProdutoIngrediente pi where pi.produtoId = :produtoId",
                         ProdutoIngrediente.class)
@@ -109,8 +157,12 @@ public class EstoqueService {
 
         int multiplicador = quantidadeProduto == null ? 1 : quantidadeProduto;
         double custoTotal = 0d;
+        Collection<Long> retirados = ingredientesRetirados == null ? List.of() : ingredientesRetirados;
 
         for (ProdutoIngrediente item : itens) {
+            if (retirados.contains(item.getIngredienteId())) {
+                continue;
+            }
             custoTotal += registrarSaidaPedido(
                     item.getIngredienteId(),
                     n(item.getQuantidade()) * multiplicador,
